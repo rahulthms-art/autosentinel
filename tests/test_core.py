@@ -121,7 +121,7 @@ def test_snapshot_round_trip():
     db = DB(":memory:")
     assert load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")
     wl = db.watchlists()[0]
-    assert wl["name"].endswith("(demo data)") and db.runs(wl["id"]) and db.findings(wl["id"])
+    assert db.runs(wl["id"])[0]["stats"]["source"] == "snapshot" and db.findings(wl["id"])
     assert not load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")  # only once
 
 
@@ -135,7 +135,7 @@ def test_interrupted_run_does_not_block_demo_snapshot():
     db.start_run(db.watchlists()[0]["id"])          # cut off by a restart
     assert db.mark_interrupted_runs() == 1
     assert load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")
-    assert [w["name"] for w in db.watchlists()] == ["EV segment watch (EU/UK/US) (demo data)"]
+    assert [w["name"] for w in db.watchlists()] == ["EV segment watch (EU/UK/US)"]
 
 
 def test_anonymizer_masks_brands_but_not_parts():
@@ -150,3 +150,15 @@ def test_anonymizer_masks_brands_but_not_parts():
     assert Anonymizer(enabled=False)("Tesla") == "Tesla"
     assert a("Transport Canada Recall 2026445 and Safety Gate A12/01234/26") == \
         "Transport Canada Recall ••••••• and Safety Gate A••/•••••/••"
+
+
+def test_legacy_demo_name_is_migrated():
+    from radar.db import DB
+    from radar.snapshot import migrate_legacy
+    db = DB(":memory:")
+    wl = db.save_watchlist("EV segment watch (demo data)", {"vehicles": []})
+    rid = db.start_run(wl)
+    db.finish_run(rid, "ok", {"relevant": 3})
+    migrate_legacy(db)
+    assert db.watchlists()[0]["name"] == "EV segment watch"
+    assert db.runs(wl)[0]["stats"] == {"relevant": 3, "source": "snapshot"}

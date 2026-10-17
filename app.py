@@ -22,7 +22,7 @@ from radar.db import DB
 from radar.llm import Router, list_nvidia_models, make_client, pick_default
 from radar.pipeline import run_watchlist
 from radar.seed import ensure_default
-from radar.snapshot import load_if_fresh
+from radar.snapshot import load_if_fresh, migrate_legacy
 from radar.signals import detect_spikes, monthly_series, recall_data_suspect
 from radar.sources import nhtsa
 
@@ -65,6 +65,7 @@ def cached_nhtsa(make: str, model: str, years: tuple) -> tuple[list, list]:
 settings = Settings()
 db = get_db(settings.db_path)
 if demo_mode():  # checked every run, so turning DEMO_MODE on later still loads the stored demo results
+    migrate_legacy(db)
     load_if_fresh(db, Path(__file__).parent / "demo" / "snapshot.json")
 
 # ---------------------------------------------------------------- Sidebar
@@ -194,6 +195,10 @@ if section == SECTIONS[0]:
         k[4].metric("Last run", (last_ok["finished_at"] or "")[5:16].replace("T", " ") if last_ok else "Never",
                     border=True)
 
+        if stats.get("source") == "snapshot":  # disappears after the first live run
+            when = pd.Timestamp(last_ok["finished_at"]).strftime("%-d %b %Y")
+            st.info(f"Showing stored results from a real run on {when}. Press **Run radar** for a live update: "
+                    "only items that are new since then will be added.", icon=":material/history:")
         if stats.get("web_search_errors"):
             st.warning(f"{stats['web_search_errors']} web search(es) failed in the last run (Tavily). "
                        "Results may be incomplete. Run again later.", icon=":material/cloud_off:")

@@ -29,14 +29,15 @@ def export(db: DB, wl_id: int) -> dict:
 
 
 def import_snapshot(db: DB, data: dict) -> int:
-    wl_id = db.save_watchlist(data["watchlist"]["name"] + " (demo data)", data["watchlist"]["config"])
+    wl_id = db.save_watchlist(data["watchlist"]["name"], data["watchlist"]["config"])
     run_map = {}
     with db.tx() as c:
         for r in sorted(data["runs"], key=lambda r: r["id"]):
             run_map[r["id"]] = c.execute(
                 "INSERT INTO runs (watchlist_id, started_at, finished_at, status, stats, brief, error) "
                 "VALUES (?,?,?,?,?,?,?)", (wl_id, r["started_at"], r["finished_at"], r["status"],
-                                           json.dumps(r["stats"]), r["brief"], r["error"])).lastrowid
+                                           json.dumps({**r["stats"], "source": "snapshot"}), r["brief"],
+                                           r["error"])).lastrowid
         fcols = ["key", "source", "type", "title", "url", "summary", "published", "market", "severity", "score",
                  "affected", "action", "status", "first_seen", "raw"]
         for f in data["findings"]:
@@ -54,6 +55,18 @@ def import_snapshot(db: DB, data: dict) -> int:
                       (run_map.get(k["run_id"]), k["at"], TAG + (k["step"] or ""), k["model"], k["seconds"],
                        k["prompt_tokens"], k["completion_tokens"], k["ok"], k["error"]))
     return wl_id
+
+
+def migrate_legacy(db: DB) -> None:
+    """Deployments that imported an older snapshot: drop the "(demo data)" name suffix and tag the
+    imported runs, so the dashboard note disappears after the first live run."""
+    for w in db.watchlists():
+        if w["name"].endswith(" (demo data)"):
+            with db.tx() as c:
+                c.execute("UPDATE watchlists SET name=? WHERE id=?", (w["name"][:-len(" (demo data)")], w["id"]))
+                for r in db.q("SELECT id, stats FROM runs WHERE watchlist_id=?", (w["id"],)):
+                    stats = {**json.loads(r["stats"] or "{}"), "source": "snapshot"}
+                    c.execute("UPDATE runs SET stats=? WHERE id=?", (json.dumps(stats), r["id"]))
 
 
 def load_if_fresh(db: DB, path: Path) -> bool:
