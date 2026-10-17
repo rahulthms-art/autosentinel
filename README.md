@@ -98,9 +98,9 @@ Tested and rejected: a Poisson significance gate, a fleet-growth adjustment, and
 
 ## Brand-neutral display mode
 
-The **Anonymize brands** switch in the sidebar, or the address `?anon=1`, replaces vehicle makes, model names, branded driver-assist products and suppliers with neutral labels: "OEM A", "Vehicle 1", "Supplier S1". It also masks anything that could be looked up to identify a brand: VINs, NHTSA, Transport Canada and EU Safety Gate reference numbers, and links.
+Brand-neutral mode is **on by default**. Turn it off with the **Anonymize brands** switch in the sidebar, `?anon=0` in the address, or `ANONYMIZE=0`. It replaces vehicle makes, model names, branded driver-assist products and suppliers with neutral labels: "OEM A", "Vehicle 1", "Supplier S1". It also masks anything that could be looked up to identify a brand: VINs, NHTSA, Transport Canada and EU Safety Gate reference numbers, and links.
 
-It changes the **display only**. The data, the analysis and every Nemotron call use the real public records. The demo video is recorded in this mode, so it shows no third-party trademarks and makes no claims about named manufacturers.
+It changes the **display only**. The data, the analysis and every Nemotron call use the real public records. The public demo and the video use this mode, so they show no third-party trademarks and make no claims about named manufacturers.
 
 ## Cost control
 

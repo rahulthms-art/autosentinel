@@ -76,7 +76,8 @@ with st.sidebar:
     wls = db.watchlists()
     names = {w["name"]: w["id"] for w in wls}
     ui.eyebrow("Watchlist")
-    anon_default = st.query_params.get("anon", os.getenv("ANONYMIZE", "")) in ("1", "true", "yes")
+    # Brand-neutral by default; real names only with ?anon=0 or ANONYMIZE=0
+    anon_default = st.query_params.get("anon", os.getenv("ANONYMIZE", "1")).lower() not in ("0", "false", "no")
     anon = st.session_state.get("anon", anon_default)
     wl_name = st.selectbox("Watchlist", list(names), label_visibility="collapsed",
                            format_func=lambda n: Anonymizer(enabled=anon)(n)) if names else None
