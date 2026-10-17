@@ -189,3 +189,11 @@ def test_analyst_can_use_rdw_and_tidies_citations(db, make_router, monkeypatch):
     ans = analyst.ask(db, router, Settings(), wl_id, "Open airbag recalls in NL?", [], on_step=steps.append)
     assert steps[0]["tool"] == "rdw_recalls" and "MGP260096" in steps[0]["observation"]
     assert ans == "Yes: RDW MGP260096 airbag recall [1]."
+
+
+def test_analyst_never_returns_a_raw_tool_call(db, make_router):
+    wl_id = db.save_watchlist("t", CFG)
+    router, _ = make_router([("Tools are no longer available", 'Step 7: web_search({"query": "x"})'),
+                             ("analyst agent", "not json")])
+    ans = analyst.ask(db, router, Settings(), wl_id, "What fine under Regulation 2099/999?", [], max_steps=1)
+    assert "web_search" not in ans and "couldn't find" in ans

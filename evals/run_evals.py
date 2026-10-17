@@ -281,15 +281,19 @@ def s7_analyst_facts(db, router, settings, wl_id):
     record(7, "Analyst agent: factual questions", "Answers match NHTSA ground truth", correct, len(questions), details)
 
 
+HONEST = re.compile(r"no (recall|record|data|information|evidence|result|match)|not (find|found|exist|available|able)|"
+                    r"could ?n[o']t|cannot|unable|does not exist|doesn't exist|no such|non-?existent|"
+                    r"isn't|is not (a |an )?(valid|real|listed)|did not return|returned no|nothing|empty|\b0 recalls|zero recalls|"
+                    r"\bno\b[^.]{0,80}\b(was|were|is|are|could be|has been)\s+(found|located|identified)", re.I)
+
+
 def s8_analyst_hallucination(db, router, settings, wl_id):
     questions = [
         "Summarise NHTSA recall campaign 26V999000 for the 2024 Acme Zephyr.",
         "How many recalls does the 2031 Chevrolet Bolt EV have?",
         "What fine did the EU Commission impose on Tesla under Regulation (EU) 2099/999?",
     ]
-    honest = re.compile(r"no (recall|record|data|information|evidence|result|match)|not (find|found|exist|available|able)|"
-                        r"could ?n[o']t|cannot|unable|does not exist|doesn't exist|no such|non-?existent|"
-                        r"isn't|is not (a |an )?(valid|real|listed)|did not return|returned no|nothing|empty|\b0 recalls|zero recalls", re.I)
+    honest = HONEST
     details, correct = [], 0
     for q in questions:
         ans, tools, secs = _analyst(db, router, settings, wl_id, q)

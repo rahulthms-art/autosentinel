@@ -92,10 +92,14 @@ def ask(db: DB, router: Router, settings: Settings, wl_id: int, question: str, h
                  "observation": obs[:400]})
         scratch += f"\nStep {step + 1}: {name}({json.dumps(args)}) -> {obs}"
     final = router.chat("deep", "Analyst final",
-                        SYSTEM.split("Tools:")[0] + "Tools are no longer available. Write the final answer now in "
-                        "Markdown, using only the research below. If it found nothing, say so plainly.",
-                        f"QUESTION: {question}\n\nResearch so far:\n{scratch or 'none'}")
-    if final.lstrip().startswith("{"):  # model still tried to call a tool
+                        SYSTEM.split("Tools:")[0] + "Tools are no longer available. Answer the user's QUESTION now, in "
+                        "Markdown, using only the research below. If the research did not find the recall, regulation "
+                        "or fact asked about, say clearly that it could not be found and may not exist. Never ask the "
+                        "user to repeat the question.",
+                        f"QUESTION: {question}\n\nResearch so far:\n{(scratch or 'none')[-12000:]}\n\n"
+                        f"Now answer this QUESTION: {question}")
+    tool_call = re.match(r"\s*(Step\s*\d+\s*:\s*)?`?(" + "|".join(tools) + r")`?\s*\(", final)
+    if final.lstrip().startswith("{") or tool_call:  # model still tried to call a tool
         parsed = parse_json(final, {})
         final = parsed.get("final") if isinstance(parsed, dict) and parsed.get("final") else (
             "I couldn't find reliable information to answer this. The searches returned no matching records.")

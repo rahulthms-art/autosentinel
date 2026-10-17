@@ -73,7 +73,7 @@ The UI follows a design system generated from the open-source [UI UX Pro Max](ht
 | Fleet check: VIN decode and recall counts vs NHTSA | 7/7 |
 | Analyst agent: factual answers vs NHTSA (Nemotron Ultra) | 12/12 |
 | Analyst agent: refuses to invent non-existent recalls or rules | 9/9 |
-| Risk brief: citations that point to real sources | 25/25 |
+| Risk brief: citations that point to real sources | 38/38 |
 
 ### Early warning: held-out backtest
 

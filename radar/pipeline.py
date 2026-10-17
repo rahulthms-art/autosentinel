@@ -32,7 +32,12 @@ Return {"queries": [{"query": "...", "topic": "Recalls|Regulations|Supplier risk
 
 TRIAGE = """You triage items for an automotive compliance & quality team. For EACH numbered item decide,
 strictly against the watch profile:
-- score: 0-10 relevance (0 = unrelated or generic news, 10 = directly affects watched vehicles/components/markets)
+- score: 0-10 relevance (0 = unrelated or generic news, 10 = directly affects watched vehicles/components/markets).
+  Road vehicles only: items about other industries (aviation, rail, marine, consumer electronics, appliances,
+  toys, food) score 0-1 even if they mention batteries, recalls or safety. Vehicles outside the profile score
+  low unless they share a watched component, supplier or regulation. Road-vehicle regulations, standards and
+  test protocols in the watched markets (EU/UN/national rules, Euro NCAP, battery and cybersecurity rules) and
+  supplier or raw-material news affecting watched components are relevant (score 5+) even if no model is named.
 - type: recall | regulation | supplier | other
 - severity: High (safety risk, legal deadline < 6 months, stop-sale/production risk) | Medium | Low
 - affected: which watched models / markets / components / suppliers, short
