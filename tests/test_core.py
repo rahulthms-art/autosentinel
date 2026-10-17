@@ -136,3 +136,17 @@ def test_interrupted_run_does_not_block_demo_snapshot():
     assert db.mark_interrupted_runs() == 1
     assert load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")
     assert [w["name"] for w in db.watchlists()] == ["EV segment watch (EU/UK/US) (demo data)"]
+
+
+def test_anonymizer_masks_brands_but_not_parts():
+    from radar.anonymize import Anonymizer
+    a = Anonymizer([{"make": "Tesla", "model": "Model Y"}, {"make": "Chevrolet", "model": "Bolt EV"}])
+    assert a("NHTSA 21V387000: Tesla Model Y: Caliper") == "NHTSA 21V••••••: OEM A Vehicle 1: Caliper"
+    assert a("Chevrolet Bolt EV brake caliper bolts may loosen") == "OEM B Vehicle 2 brake caliper bolts may loosen"
+    assert a("VIN 5YJYGDEE3MF100000, see https://www.nhtsa.gov/x") == "VIN …0000, see [link hidden]"
+    assert a("Chevy and Chevrolet") == "OEM B and OEM B"
+    assert "Nissan" not in a("Nissan Leaf") and a("Nissan again").startswith("OEM C")
+    assert a("NVIDIA Nemotron on Nebius with Tavily") == "NVIDIA Nemotron on Nebius with Tavily"  # sponsors stay
+    assert Anonymizer(enabled=False)("Tesla") == "Tesla"
+    assert a("Transport Canada Recall 2026445 and Safety Gate A12/01234/26") == \
+        "Transport Canada Recall ••••••• and Safety Gate A••/•••••/••"

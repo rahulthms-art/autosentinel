@@ -96,6 +96,12 @@ Tested and rejected: a Poisson significance gate, a fleet-growth adjustment, and
 - A naive rule (alert on any component with 3+ complaints) catches more recalls at similar precision. The app offers it as *High sensitivity*.
 - Early warning ranks leads for a quality team to investigate. It is not a recall predictor.
 
+## Brand-neutral display mode
+
+The **Anonymize brands** switch in the sidebar, or the address `?anon=1`, replaces vehicle makes, model names, branded driver-assist products and suppliers with neutral labels: "OEM A", "Vehicle 1", "Supplier S1". It also masks anything that could be looked up to identify a brand: VINs, NHTSA, Transport Canada and EU Safety Gate reference numbers, and links.
+
+It changes the **display only**. The data, the analysis and every Nemotron call use the real public records. The demo video is recorded in this mode, so it shows no third-party trademarks and makes no claims about named manufacturers.
+
 ## Cost control
 
 Every Nemotron call is priced and logged. The sidebar shows the estimated spend, and **Runs & audit** shows the cost of each run.
@@ -148,6 +154,7 @@ The tests cover spike detection, JSON parsing, VIN validation, severity rules, a
 
 ```
 ui.py                  Design tokens, severity badges, anomaly chart
+radar/anonymize.py     Brand-neutral display mode
 app.py                 Streamlit UI (Dashboard, Early Warning, Fleet Check, Analyst, Watchlists, Runs & Audit)
 radar/pipeline.py      Run engine: collect → de-dup → triage → signals → brief → store → alert
 radar/signals.py       Complaint spike detection

@@ -15,6 +15,7 @@ import streamlit as st
 
 import ui
 from radar import analyst, fleet
+from radar.anonymize import Anonymizer
 from radar.budget import BudgetExceeded, Guard, LimitReached, budget_usd, call_cost, demo_mode
 from radar.config import TOPICS, Settings
 from radar.db import DB
@@ -74,9 +75,16 @@ with st.sidebar:
     wls = db.watchlists()
     names = {w["name"]: w["id"] for w in wls}
     ui.eyebrow("Watchlist")
-    wl_name = st.selectbox("Watchlist", list(names), label_visibility="collapsed") if names else None
+    anon_default = st.query_params.get("anon", os.getenv("ANONYMIZE", "")) in ("1", "true", "yes")
+    anon = st.session_state.get("anon", anon_default)
+    wl_name = st.selectbox("Watchlist", list(names), label_visibility="collapsed",
+                           format_func=lambda n: Anonymizer(enabled=anon)(n)) if names else None
     wl_id = names.get(wl_name) if wl_name else None
     wl = db.watchlist(wl_id) if wl_id else None
+    anon = st.toggle("Anonymize brands", value=anon_default, key="anon",
+                     help="For screen recordings: hides vehicle makes, models, suppliers, VINs, recall numbers and "
+                          "links. Display only; the data and AI stay real.")
+    A = Anonymizer((wl or {}).get("config", {}).get("vehicles", []), enabled=anon)
 
     st.divider()
     ui.eyebrow("Connections")
@@ -143,10 +151,10 @@ if section == SECTIONS[0]:
         head = st.columns([4, 1], vertical_alignment="bottom")
         with head[0]:
             ui.eyebrow("Watchlist")
-            st.title(wl["name"], anchor=False)
+            st.title(A(wl["name"]), anchor=False)
             cfg = wl["config"]
             st.caption(" · ".join(filter(None, [
-                ", ".join(f"{v['make']} {v['model']}" for v in cfg.get("vehicles", [])),
+                ", ".join(A.vehicle(v["make"], v["model"]) for v in cfg.get("vehicles", [])),
                 ", ".join(cfg.get("markets", [])),
                 ", ".join(cfg.get("topics", []))])))
         run_clicked = head[1].button("Run radar", icon=":material/play_arrow:", type="primary",
@@ -162,7 +170,7 @@ if section == SECTIONS[0]:
             guard.record("run")
             with st.status("Radar running...", expanded=True) as status:
                 try:
-                    out = run_watchlist(db, make_router(), settings, wl_id, progress=st.write)
+                    out = run_watchlist(db, make_router(), settings, wl_id, progress=lambda m: st.write(A(m)))
                     status.update(label=f"Run {out['run_id']} complete", state="complete", expanded=False)
                 except BudgetExceeded as e:
                     status.update(label="Stopped: budget reached", state="error")
@@ -191,8 +199,8 @@ if section == SECTIONS[0]:
                        "Results may be incomplete. Run again later.", icon=":material/cloud_off:")
         if last_ok and last_ok["brief"]:
             with st.expander("Risk brief: latest run", icon=":material/summarize:", expanded=True):
-                st.markdown(last_ok["brief"])
-                st.download_button("Download brief", last_ok["brief"], icon=":material/download:",
+                st.markdown(A(last_ok["brief"]))
+                st.download_button("Download brief", A(last_ok["brief"]), icon=":material/download:",
                                    file_name=f"radar-brief-run{last_ok['id']}.md")
         elif not runs:
             st.info("No runs yet. Connect your keys and press **Run radar**: the agent collects recalls, "
@@ -212,10 +220,10 @@ if section == SECTIONS[0]:
                 "Status": f["status"], "Type": f["type"], "Market": f["market"],
                 "Title": f["title"], "Affected": f["affected"], "Published": f["published"],
             } for f in rows])
-            sel = st.dataframe(ui.style_findings(table), hide_index=True, width="stretch",
+            sel = st.dataframe(ui.style_findings(A.frame(table)), hide_index=True, width="stretch",
                                on_select="rerun", selection_mode="single-row", key="findings_table",
                                column_config={"Title": st.column_config.TextColumn(width="large")})
-            st.download_button("Export findings (CSV)", pd.DataFrame(rows).drop(columns=["raw"]).to_csv(index=False),
+            st.download_button("Export findings (CSV)", A.frame(pd.DataFrame(rows).drop(columns=["raw"])).to_csv(index=False),
                                icon=":material/download:", file_name="findings.csv")
 
             picked = sel.selection.rows if sel and sel.selection else []
@@ -223,13 +231,13 @@ if section == SECTIONS[0]:
                 f = rows[picked[0]]
                 with st.container(border=True):
                     ui.eyebrow(f"{f['type']} · {f['market'] or 'Global'} · {f['source'].upper()}")
-                    st.markdown(f"#### {f['title']}")
+                    st.markdown(f"#### {A(f['title'])}")
                     ui.severity_badge(f["severity"])
                     c1, c2 = st.columns(2)
-                    c1.markdown(f"**Affected**  \n{f['affected'] or 'n/a'}")
-                    c2.markdown(f"**Recommended action**  \n{f['action'] or 'n/a'}")
-                    st.markdown(f["summary"] or "")
-                    if f["url"]:
+                    c1.markdown(f"**Affected**  \n{A(f['affected']) or 'n/a'}")
+                    c2.markdown(f"**Recommended action**  \n{A(f['action']) or 'n/a'}")
+                    st.markdown(A(f["summary"]) or "")
+                    if f["url"] and not anon:
                         st.link_button("Open source", f["url"], icon=":material/open_in_new:")
                     new_status = st.segmented_control(
                         "Status", ["new", "acknowledged", "actioned", "dismissed"], default=f["status"],
@@ -251,7 +259,7 @@ if section == SECTIONS[1]:
                "candidate future recall: worth investigating before the regulator does.")
     if wl and wl["config"].get("vehicles"):
         vehicles = wl["config"]["vehicles"]
-        labels = [f"{v['make']} {v['model']} ({min(v['years'])}–{max(v['years'])})" for v in vehicles]
+        labels = [f"{A.vehicle(v['make'], v['model'])} ({min(v['years'])}–{max(v['years'])})" for v in vehicles]
         pick, sens = st.columns([3, 2])
         v = vehicles[pick.selectbox("Vehicle", range(len(vehicles)), format_func=lambda i: labels[i])]
         sensitivity = sens.segmented_control(
@@ -308,7 +316,7 @@ if section == SECTIONS[1]:
         for s in stored:
             with st.expander(f"Nemotron analysis: {s['component'].title()} (×{s['ratio']})",
                              icon=":material/psychology:", expanded=True):
-                st.markdown(s["analysis"])
+                st.markdown(A(s["analysis"]))
         if not stored:
             st.caption("Run the radar with *Early warning* enabled to get Nemotron's failure-mode analysis of each spike.")
     st.caption("Source: NHTSA (US market). Shared global platforms often share failure modes.")
@@ -335,7 +343,7 @@ if section == SECTIONS[2]:
             st.warning("Checking the first 2,000 VINs.", icon=":material/warning:")
             vins = vins[:2000]
         with st.status("Checking...", expanded=False) as status:
-            rows = fleet.check_fleet(vins, progress=st.write)
+            rows = fleet.check_fleet(vins, progress=lambda m: st.write(A(m)))
             status.update(label="Done", state="complete")
         df = pd.DataFrame(rows)
         df["Do-not-drive / park outside"] = df["Do-not-drive / park outside"].map({True: "▲ Yes", False: "No"})
@@ -343,6 +351,10 @@ if section == SECTIONS[2]:
         m[0].metric("Vehicles", len(df), border=True)
         m[1].metric("With ≥ 1 recall", int((df["Recalls"] > 0).sum()), border=True)
         m[2].metric("Do-not-drive / park outside", int((df["Do-not-drive / park outside"] != "No").sum()), border=True)
+        if anon:  # makes/models outside the watchlist still get neutral aliases
+            df["Make"] = df["Make"].map(A.make)
+            df["Model"] = df["Model"].map(lambda m: A(m) if A(m) != m else "Model")
+        df = A.frame(df)
         st.dataframe(df, hide_index=True, width="stretch")
         st.download_button("Export results (CSV)", df.to_csv(index=False), icon=":material/download:",
                            file_name="fleet-recall-exposure.csv")
@@ -356,13 +368,13 @@ if section == SECTIONS[3]:
                "live web, VIN decoder) and answers with citations.")
     st.session_state.setdefault("analyst_chat", [])
     if not st.session_state.analyst_chat:
-        st.caption("Try: *Are there open brake issues for the Bolt EV, and what EU ADAS rules change in 2027?*")
+        st.caption(A("Try: *Are there open brake issues for the Bolt EV, and what EU ADAS rules change in 2027?*"))
     elif st.button("Clear conversation", icon=":material/delete_sweep:"):
         st.session_state.analyst_chat = []
         st.rerun()
     for msg in st.session_state.analyst_chat:
         with st.chat_message(msg["role"], avatar=":material/person:" if msg["role"] == "user" else ":material/radar:"):
-            st.markdown(msg["content"])
+            st.markdown(A(msg["content"]))
     q = st.chat_input("Ask about recalls, regulations, suppliers or a VIN", disabled=not (ai_ready and wl_id))
     if q:
         asked = sum(m["role"] == "user" for m in st.session_state.analyst_chat)
@@ -375,14 +387,14 @@ if section == SECTIONS[3]:
     if q:
         st.session_state.analyst_chat.append({"role": "user", "content": q})
         with st.chat_message("user", avatar=":material/person:"):
-            st.markdown(q)
+            st.markdown(A(q))
         with st.chat_message("assistant", avatar=":material/radar:"):
             with st.status("Researching...", expanded=True) as status:
                 def show(s):
                     if s.get("final"):
                         st.write(f"Step {s['step']}: answer ready")
                     else:
-                        st.write(f"Step {s['step']}: `{s['tool']}` {s['args']}")
+                        st.write(A(f"Step {s['step']}: `{s['tool']}` {s['args']}"))
                 try:
                     ans = analyst.ask(db, make_router(), settings, wl_id, q,
                                       st.session_state.analyst_chat[:-1], on_step=show)
@@ -390,13 +402,21 @@ if section == SECTIONS[3]:
                 except Exception as e:
                     status.update(label="Failed", state="error")
                     ans = f"Error: {e}"
-            st.markdown(ans)
+            st.markdown(A(ans))
         st.session_state.analyst_chat.append({"role": "assistant", "content": ans})
 
 # ---------------------------------------------------------------- Watchlists
 if section == SECTIONS[4]:
     ui.eyebrow("Configuration")
     st.title("Watchlists", anchor=False)
+    if anon and wl:
+        st.info("Editing is hidden while brands are anonymized.", icon=":material/visibility_off:")
+        st.dataframe(pd.DataFrame([{"Vehicle": A.vehicle(v["make"], v["model"]),
+                                    "Years": f"{min(v['years'])}–{max(v['years'])}"} for v in wl["config"]["vehicles"]]),
+                     hide_index=True, width="stretch")
+        st.caption(A(f"Markets: {', '.join(wl['config'].get('markets', []))} · Components: "
+                     f"{wl['config'].get('components', '')} · Suppliers: {wl['config'].get('suppliers', '')}"))
+        st.stop()
     mode = st.segmented_control("Mode", ["Edit selected", "Create new"], default="Edit selected" if wl else "Create new",
                                 label_visibility="collapsed") or "Edit selected"
     editing = bool(wl and mode == "Edit selected")
@@ -457,7 +477,7 @@ if section == SECTIONS[5]:
         runs = db.runs(wl_id)
         if runs:
             runs_df = pd.DataFrame([{"Run": r["id"], "Started": r["started_at"], "Status": r["status"],
-                                     **r["stats"], "Error": r["error"]} for r in runs])
+                                     **r["stats"], "Error": A(r["error"])} for r in runs])
             st.dataframe(runs_df, hide_index=True, width="stretch")
             rid = st.selectbox("Inspect run", [r["id"] for r in runs])
             calls = pd.DataFrame(db.llm_calls(rid))
@@ -476,6 +496,6 @@ if section == SECTIONS[5]:
             brief = next(r["brief"] for r in runs if r["id"] == rid)
             if brief:
                 with st.expander("Brief from this run", icon=":material/summarize:"):
-                    st.markdown(brief)
+                    st.markdown(A(brief))
         else:
             st.caption("No runs yet.")
