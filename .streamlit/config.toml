@@ -1,0 +1,17 @@
+# Design tokens from design-system/autosentinel/MASTER.md
+[theme]
+base = "light"
+primaryColor = "#1E3A8A"
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#F1F5F9"
+textColor = "#0F172A"
+linkColor = "#1E40AF"
+borderColor = "#CBD5E1"
+showWidgetBorder = true
+baseRadius = "6px"
+font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
+baseFontSize = 15
+
+[theme.sidebar]
+backgroundColor = "#E9EEF5"

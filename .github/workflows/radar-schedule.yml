@@ -1,0 +1,19 @@
+# Example: daily headless radar run (same entrypoint works on Nebius Serverless Jobs).
+# Add NEBIUS_API_KEY, TAVILY_API_KEY and optional ALERT_WEBHOOK_URL as repository secrets.
+name: radar-daily
+on:
+  schedule: [{cron: "0 6 * * 1-5"}]
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install -r requirements.txt
+      - run: python -m jobs.run_watchlists
+        env:
+          NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}

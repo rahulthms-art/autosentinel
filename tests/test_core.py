@@ -1,0 +1,88 @@
+from datetime import date
+
+from radar.fleet import clean_vins
+from radar.llm import parse_json, strip_thinking
+from radar.signals import detect_spikes
+from radar.sources.nhtsa import recall_severity
+
+
+def test_parse_json_variants():
+    assert parse_json('```json\n{"a": 1}\n```', None) == {"a": 1}
+    assert parse_json('Sure! {"a": [1, 2]} hope it helps', None) == {"a": [1, 2]}
+    assert parse_json('["x", "y"]', None) == ["x", "y"]
+    assert parse_json("no json here", {"d": 1}) == {"d": 1}
+    multi = '{"tool": "web_search", "args": {"q": "a"}} {"tool": "web_search", "args": {"q": "b"}}'
+    assert parse_json(multi, None) == {"tool": "web_search", "args": {"q": "a"}}
+    assert strip_thinking("<think>secret</think> answer") == "answer"
+
+
+def _c(day, comp, fire=False):
+    return {"filed": day, "components": [comp], "summary": "s", "crash": False,
+            "fire": fire, "injuries": 0, "deaths": 0}
+
+
+def test_spike_detection_flags_unrecalled_spike():
+    as_of = date(2026, 10, 1)
+    complaints = [_c("2026-09-%02d" % d, "ELECTRICAL SYSTEM", fire=d < 3) for d in range(1, 9)]  # 8 recent
+    complaints += [_c("2026-03-01", "ELECTRICAL SYSTEM")]                                      # 1 in baseline
+    complaints += [_c("2026-09-05", "BRAKES"), _c("2026-02-05", "BRAKES")] * 2                  # steady
+    recalls = [{"component": "BRAKES:HYDRAULIC", "date": "2026-05-01"}]
+    spikes = detect_spikes(complaints, recalls, as_of=as_of)
+    assert [s["component"] for s in spikes] == ["ELECTRICAL SYSTEM"]
+    s = spikes[0]
+    assert s["recent"] == 8 and not s["recalled"] and s["severity"]["fire"] == 2 and s["ratio"] >= 2
+
+
+def test_spike_marked_recalled_when_recall_exists():
+    complaints = [_c("2026-09-%02d" % d, "AIR BAGS") for d in range(1, 6)]
+    spikes = detect_spikes(complaints, [{"component": "AIR BAGS:FRONTAL", "date": "2026-08-01"}],
+                           as_of=date(2026, 10, 1))
+    assert spikes and spikes[0]["recalled"]
+
+
+def test_recall_severity_rules():
+    assert recall_severity({"park_it": True, "component": "x", "consequence": ""}) == "High"
+    assert recall_severity({"component": "AIR BAGS:FRONTAL", "consequence": ""}) == "High"
+    assert recall_severity({"component": "LATCHES", "consequence": "door may open"}) == "Medium"
+    assert recall_severity({"component": "BACK OVER PREVENTION", "consequence": "increasing the risk of a crash"}) == "Medium"
+    assert recall_severity({"component": "ELECTRICAL SYSTEM", "consequence": "increasing the risk of a fire"}) == "High"
+
+
+def test_clean_vins():
+    good, bad = clean_vins(["5n1at2mv0lc700000", "5N1AT2MV0LC700000", "BAD", "", "IOQ00000000000000"])
+    assert good == ["5N1AT2MV0LC700000"]
+    assert bad == ["BAD", "IOQ00000000000000"]
+
+
+def test_recall_data_suspect_guard():
+    from radar.signals import recall_data_suspect
+    complaints = [_c("2026-09-01", "BRAKES")] * 60
+    assert recall_data_suspect(complaints, [])
+    assert not recall_data_suspect(complaints, [{"component": "BRAKES", "date": "2026-01-01"}])
+    assert not recall_data_suspect(complaints[:10], [])
+
+
+def test_component_families_match_complaints_and_recalls():
+    from radar.signals import component_family, complaint_families, recall_families
+    # complaint lists split on commas, which breaks "SERVICE BRAKES, HYDRAULIC" into two parts
+    assert complaint_families({"components": ["SERVICE BRAKES", " HYDRAULIC", "ENGINE"]}) == {"SERVICE BRAKES", "ENGINE"}
+    assert component_family("SERVICE BRAKES, HYDRAULIC:FOUNDATION COMPONENTS:DISC:CALIPER") == "SERVICE BRAKES"
+    assert component_family("FUEL SYSTEM, GASOLINE:DELIVERY") == component_family("FUEL/PROPULSION SYSTEM")
+    assert component_family("UNKNOWN OR OTHER") is None
+    assert "ADAS" in recall_families("ELECTRICAL SYSTEM:ADAS:AUTONOMOUS/SELF DRIVING:SOFTWARE")
+    assert component_family("LANE DEPARTURE") == component_family("FORWARD COLLISION AVOIDANCE") == "ADAS"
+
+
+def test_brake_spike_is_covered_by_hydraulic_brake_recall():
+    complaints = [_c("2026-09-%02d" % d, "SERVICE BRAKES") for d in range(1, 9)]
+    recalls = [{"component": "SERVICE BRAKES, HYDRAULIC:CALIPER", "date": "2026-06-01"}]
+    spikes = detect_spikes(complaints, recalls, as_of=date(2026, 10, 1))
+    assert spikes and spikes[0]["component"] == "SERVICE BRAKES" and spikes[0]["recalled"]
+
+
+def test_priority_tiers():
+    from radar.signals import priority
+    assert priority({"p_value": 0.0001, "severity": {"crash": 0, "fire": 0, "injuries": 0}}) == "Priority"
+    assert priority({"p_value": 0.5, "severity": {"crash": 2, "fire": 1, "injuries": 0}}) == "Priority"
+    assert priority({"p_value": 0.01, "severity": {"crash": 0, "fire": 0, "injuries": 0}}) == "Watch"
+    assert priority({"p_value": 0.5, "severity": {"crash": 0, "fire": 0, "injuries": 0}}) == "Low"

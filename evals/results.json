@@ -1,0 +1,1369 @@
+{
+  "date": "2026-10-17",
+  "fast_model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "deep_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "seconds": 554,
+  "llm_calls": 84,
+  "tokens": 263709,
+  "scenarios": [
+    {
+      "n": 1,
+      "scenario": "Triage: relevance filtering",
+      "measures": "Relevant vs irrelevant (score >= 4)",
+      "correct": 58,
+      "total": 60,
+      "accuracy": 0.967,
+      "note": "3 runs: 19/20, 20/20, 19/20",
+      "details": [
+        [
+          {
+            "title": "EU Safety Gate alert: Hyundai Ioniq 5 integrated charging control unit failure",
+            "expected_relevant": true,
+            "score": 10.0,
+            "ok": true
+          },
+          {
+            "title": "Battery passport obligations under EU Battery Regulation apply from February 2027",
+            "expected_relevant": true,
+            "score": 5.0,
+            "ok": true
+          },
+          {
+            "title": "UNECE WP.29 adopts amendment to UN R155 cybersecurity management systems",
+            "expected_relevant": true,
+            "score": 6.0,
+            "ok": true
+          },
+          {
+            "title": "Fire at airbag inflator plant disrupts deliveries to European automakers",
+            "expected_relevant": true,
+            "score": 7.0,
+            "ok": true
+          },
+          {
+            "title": "Volkswagen recalls ID.4 over 12V battery cable chafing against steering column",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "Tesla Model Y recall: front passenger airbag may not deploy correctly",
+            "expected_relevant": true,
+            "score": 8.0,
+            "ok": true
+          },
+          {
+            "title": "EU General Safety Regulation phase 3 requirements for ADAS from July 2026",
+            "expected_relevant": true,
+            "score": 6.0,
+            "ok": true
+          },
+          {
+            "title": "Chevrolet Bolt EV battery modules: new remedy for thermal events announced",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "Euro NCAP 2026 protocols add driver-monitoring and lane-support scoring",
+            "expected_relevant": true,
+            "score": 4.0,
+            "ok": true
+          },
+          {
+            "title": "Lithium price slump squeezes margins at major battery cell makers",
+            "expected_relevant": true,
+            "score": 3.0,
+            "ok": false
+          },
+          {
+            "title": "Recall of magnetic building toys due to swallowing hazard",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Harley-Davidson recalls touring motorcycles over front fork bolts",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Peanut butter recalled for possible salmonella contamination",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Football club completes record striker transfer",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Boeing 737 MAX door plug inspections ordered by FAA",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Tablet battery swelling: manufacturer offers free replacements",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Celebrity chef opens new restaurant in Paris",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Dishwasher recall over door latch that can break",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Electric scooter battery fires prompt recall of 40,000 e-scooters",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Diesel pickup recall: fuel injection pump may fail on V8 engines",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          }
+        ],
+        [
+          {
+            "title": "EU Safety Gate alert: Hyundai Ioniq 5 integrated charging control unit failure",
+            "expected_relevant": true,
+            "score": 10.0,
+            "ok": true
+          },
+          {
+            "title": "Battery passport obligations under EU Battery Regulation apply from February 2027",
+            "expected_relevant": true,
+            "score": 7.0,
+            "ok": true
+          },
+          {
+            "title": "UNECE WP.29 adopts amendment to UN R155 cybersecurity management systems",
+            "expected_relevant": true,
+            "score": 8.0,
+            "ok": true
+          },
+          {
+            "title": "Fire at airbag inflator plant disrupts deliveries to European automakers",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "Volkswagen recalls ID.4 over 12V battery cable chafing against steering column",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "Tesla Model Y recall: front passenger airbag may not deploy correctly",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "EU General Safety Regulation phase 3 requirements for ADAS from July 2026",
+            "expected_relevant": true,
+            "score": 8.0,
+            "ok": true
+          },
+          {
+            "title": "Chevrolet Bolt EV battery modules: new remedy for thermal events announced",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "Euro NCAP 2026 protocols add driver-monitoring and lane-support scoring",
+            "expected_relevant": true,
+            "score": 6.0,
+            "ok": true
+          },
+          {
+            "title": "Lithium price slump squeezes margins at major battery cell makers",
+            "expected_relevant": true,
+            "score": 5.0,
+            "ok": true
+          },
+          {
+            "title": "Recall of magnetic building toys due to swallowing hazard",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Harley-Davidson recalls touring motorcycles over front fork bolts",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Peanut butter recalled for possible salmonella contamination",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Football club completes record striker transfer",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Boeing 737 MAX door plug inspections ordered by FAA",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Tablet battery swelling: manufacturer offers free replacements",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Celebrity chef opens new restaurant in Paris",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Dishwasher recall over door latch that can break",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Electric scooter battery fires prompt recall of 40,000 e-scooters",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Diesel pickup recall: fuel injection pump may fail on V8 engines",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          }
+        ],
+        [
+          {
+            "title": "EU Safety Gate alert: Hyundai Ioniq 5 integrated charging control unit failure",
+            "expected_relevant": true,
+            "score": 10.0,
+            "ok": true
+          },
+          {
+            "title": "Battery passport obligations under EU Battery Regulation apply from February 2027",
+            "expected_relevant": true,
+            "score": 5.0,
+            "ok": true
+          },
+          {
+            "title": "UNECE WP.29 adopts amendment to UN R155 cybersecurity management systems",
+            "expected_relevant": true,
+            "score": 6.0,
+            "ok": true
+          },
+          {
+            "title": "Fire at airbag inflator plant disrupts deliveries to European automakers",
+            "expected_relevant": true,
+            "score": 7.0,
+            "ok": true
+          },
+          {
+            "title": "Volkswagen recalls ID.4 over 12V battery cable chafing against steering column",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "Tesla Model Y recall: front passenger airbag may not deploy correctly",
+            "expected_relevant": true,
+            "score": 8.0,
+            "ok": true
+          },
+          {
+            "title": "EU General Safety Regulation phase 3 requirements for ADAS from July 2026",
+            "expected_relevant": true,
+            "score": 5.0,
+            "ok": true
+          },
+          {
+            "title": "Chevrolet Bolt EV battery modules: new remedy for thermal events announced",
+            "expected_relevant": true,
+            "score": 9.0,
+            "ok": true
+          },
+          {
+            "title": "Euro NCAP 2026 protocols add driver-monitoring and lane-support scoring",
+            "expected_relevant": true,
+            "score": 4.0,
+            "ok": true
+          },
+          {
+            "title": "Lithium price slump squeezes margins at major battery cell makers",
+            "expected_relevant": true,
+            "score": 3.0,
+            "ok": false
+          },
+          {
+            "title": "Recall of magnetic building toys due to swallowing hazard",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Harley-Davidson recalls touring motorcycles over front fork bolts",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Peanut butter recalled for possible salmonella contamination",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Football club completes record striker transfer",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Boeing 737 MAX door plug inspections ordered by FAA",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Tablet battery swelling: manufacturer offers free replacements",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Celebrity chef opens new restaurant in Paris",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Dishwasher recall over door latch that can break",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Electric scooter battery fires prompt recall of 40,000 e-scooters",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          },
+          {
+            "title": "Diesel pickup recall: fuel injection pump may fail on V8 engines",
+            "expected_relevant": false,
+            "score": 0.0,
+            "ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "19/20",
+        "20/20",
+        "19/20"
+      ]
+    },
+    {
+      "n": 2,
+      "scenario": "Triage: severity rating",
+      "measures": "Safety-critical = High; minor = Medium/Low",
+      "correct": 30,
+      "total": 30,
+      "accuracy": 1.0,
+      "note": "3 runs: 10/10, 10/10, 10/10",
+      "details": [
+        [
+          {
+            "title": "Recall: Battery may overheat and catch fire; owners told to park outside",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Driver frontal airbag may not deploy in a crash",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Brake caliper bolts may loosen causing loss of braking",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Steering column coupling may separate causing loss of steering",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Inverter fault may cause sudden loss of drive power at highway speed",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Owner's manual is missing child seat installation information",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Tire placard label lists incorrect tire size",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Floor mat clip may be missing from the passenger side",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Seat belt reminder chime may not sound for rear passengers",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Cargo cover may rattle at highway speed",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "title": "Recall: Battery may overheat and catch fire; owners told to park outside",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Driver frontal airbag may not deploy in a crash",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Brake caliper bolts may loosen causing loss of braking",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Steering column coupling may separate causing loss of steering",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Inverter fault may cause sudden loss of drive power at highway speed",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Owner's manual is missing child seat installation information",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Tire placard label lists incorrect tire size",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Floor mat clip may be missing from the passenger side",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Seat belt reminder chime may not sound for rear passengers",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Cargo cover may rattle at highway speed",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "title": "Recall: Battery may overheat and catch fire; owners told to park outside",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Driver frontal airbag may not deploy in a crash",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Brake caliper bolts may loosen causing loss of braking",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Steering column coupling may separate causing loss of steering",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Inverter fault may cause sudden loss of drive power at highway speed",
+            "expected": "High",
+            "got": "High",
+            "ok": true
+          },
+          {
+            "title": "Recall: Owner's manual is missing child seat installation information",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Tire placard label lists incorrect tire size",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Floor mat clip may be missing from the passenger side",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Seat belt reminder chime may not sound for rear passengers",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          },
+          {
+            "title": "Recall: Cargo cover may rattle at highway speed",
+            "expected": "Medium/Low",
+            "got": "Medium",
+            "ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "10/10",
+        "10/10",
+        "10/10"
+      ]
+    },
+    {
+      "n": 3,
+      "scenario": "Triage: type classification",
+      "measures": "recall / regulation / supplier",
+      "correct": 27,
+      "total": 27,
+      "accuracy": 1.0,
+      "note": "3 runs: 9/9, 9/9, 9/9",
+      "details": [
+        [
+          {
+            "title": "Transport Canada recall 2026-445: Hyundai Ioniq 5 seat belt pretensioner",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "EU Safety Gate: Volkswagen ID.4 high-voltage battery recall",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "DVSA recall: Tesla Model Y rear camera image may not display",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "Commission Delegated Regulation (EU) 2026/1753 on battery durability requirements",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "UN Regulation No. 156 amendment on software update management",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "UK Vehicle Emissions Trading Schemes: 2027 ZEV mandate targets confirmed",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "Battery cell maker files for insolvency, threatening EV production in Europe",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          },
+          {
+            "title": "Chip shortage: semiconductor supplier cuts automotive MCU allocations by 20%",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          },
+          {
+            "title": "Flood halts production at Thai plant making wiring harnesses for EVs",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "title": "Transport Canada recall 2026-445: Hyundai Ioniq 5 seat belt pretensioner",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "EU Safety Gate: Volkswagen ID.4 high-voltage battery recall",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "DVSA recall: Tesla Model Y rear camera image may not display",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "Commission Delegated Regulation (EU) 2026/1753 on battery durability requirements",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "UN Regulation No. 156 amendment on software update management",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "UK Vehicle Emissions Trading Schemes: 2027 ZEV mandate targets confirmed",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "Battery cell maker files for insolvency, threatening EV production in Europe",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          },
+          {
+            "title": "Chip shortage: semiconductor supplier cuts automotive MCU allocations by 20%",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          },
+          {
+            "title": "Flood halts production at Thai plant making wiring harnesses for EVs",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "title": "Transport Canada recall 2026-445: Hyundai Ioniq 5 seat belt pretensioner",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "EU Safety Gate: Volkswagen ID.4 high-voltage battery recall",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "DVSA recall: Tesla Model Y rear camera image may not display",
+            "expected": "recall",
+            "got": "recall",
+            "ok": true
+          },
+          {
+            "title": "Commission Delegated Regulation (EU) 2026/1753 on battery durability requirements",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "UN Regulation No. 156 amendment on software update management",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "UK Vehicle Emissions Trading Schemes: 2027 ZEV mandate targets confirmed",
+            "expected": "regulation",
+            "got": "regulation",
+            "ok": true
+          },
+          {
+            "title": "Battery cell maker files for insolvency, threatening EV production in Europe",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          },
+          {
+            "title": "Chip shortage: semiconductor supplier cuts automotive MCU allocations by 20%",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          },
+          {
+            "title": "Flood halts production at Thai plant making wiring harnesses for EVs",
+            "expected": "supplier",
+            "got": "supplier",
+            "ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "9/9",
+        "9/9",
+        "9/9"
+      ]
+    },
+    {
+      "n": 4,
+      "scenario": "Early warning: spike detection (synthetic)",
+      "measures": "Injected 3-6x spikes vs normal noise",
+      "correct": 20,
+      "total": 20,
+      "accuracy": 1.0,
+      "note": "precision 100%, recall 100%",
+      "details": [
+        [
+          {
+            "component": "COMPONENT 0",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 1",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 2",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 3",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 4",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 5",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 6",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 7",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 8",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 9",
+            "true_spike": true,
+            "flagged": true,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 10",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 11",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 12",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 13",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 14",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 15",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 16",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 17",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 18",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          },
+          {
+            "component": "COMPONENT 19",
+            "true_spike": false,
+            "flagged": false,
+            "ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "20/20"
+      ]
+    },
+    {
+      "n": 5,
+      "scenario": "Early warning: recall-coverage matching",
+      "measures": "Is the spiking component already recalled?",
+      "correct": 6,
+      "total": 6,
+      "accuracy": 1.0,
+      "note": "",
+      "details": [
+        [
+          {
+            "case": "Recall on same component 2 months ago",
+            "expected_covered": true,
+            "got": true,
+            "ok": true
+          },
+          {
+            "case": "Recall on same component 11 months ago",
+            "expected_covered": true,
+            "got": true,
+            "ok": true
+          },
+          {
+            "case": "Recall on same component 3 years ago (stale)",
+            "expected_covered": false,
+            "got": false,
+            "ok": true
+          },
+          {
+            "case": "Recall on a different component",
+            "expected_covered": false,
+            "got": false,
+            "ok": true
+          },
+          {
+            "case": "No recalls at all",
+            "expected_covered": false,
+            "got": false,
+            "ok": true
+          },
+          {
+            "case": "Two recalls, one matching",
+            "expected_covered": true,
+            "got": true,
+            "ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "6/6"
+      ]
+    },
+    {
+      "n": 6,
+      "scenario": "Fleet check: VIN decode + recall match",
+      "measures": "Decode, invalid-VIN rejection, recall counts vs NHTSA",
+      "correct": 7,
+      "total": 7,
+      "accuracy": 1.0,
+      "note": "",
+      "details": [
+        [
+          {
+            "check": "invalid VINs rejected, valid kept",
+            "ok": true
+          },
+          {
+            "vin": "5YJYGDEE3MF100000",
+            "decoded": [
+              "Tesla",
+              "Model Y",
+              2021
+            ],
+            "expected": [
+              "Tesla",
+              "Model Y",
+              2021
+            ],
+            "decode_ok": true,
+            "recalls": 23,
+            "nhtsa_direct": 23,
+            "count_ok": true
+          },
+          {
+            "vin": "1G1FY6S02M4100000",
+            "decoded": [
+              "Chevrolet",
+              "Bolt EV",
+              2021
+            ],
+            "expected": [
+              "Chevrolet",
+              "Bolt EV",
+              2021
+            ],
+            "decode_ok": true,
+            "recalls": 5,
+            "nhtsa_direct": 5,
+            "count_ok": true
+          },
+          {
+            "vin": "KM8KN4AE6NU100000",
+            "decoded": [
+              "Hyundai",
+              "Ioniq 5",
+              2022
+            ],
+            "expected": [
+              "Hyundai",
+              "Ioniq 5",
+              2022
+            ],
+            "decode_ok": true,
+            "recalls": 3,
+            "nhtsa_direct": 3,
+            "count_ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "7/7"
+      ]
+    },
+    {
+      "n": 7,
+      "scenario": "Analyst agent: factual questions",
+      "measures": "Answers match NHTSA ground truth",
+      "correct": 12,
+      "total": 12,
+      "accuracy": 1.0,
+      "note": "3 runs: 4/4, 4/4, 4/4",
+      "details": [
+        [
+          {
+            "question": "How many NHTSA recall campaigns exist for the 2022 Chevrolet Bolt EV? Reply with the number.",
+            "ground_truth": "7 campaigns",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 4.6,
+            "answer": "There are **7 NHTSA recall campaigns** for the 2022 Chevrolet Bolt EV.\n\nSource: NHTSA recalls query for Chevrolet Bolt EV 2022 returned campaigns 21V517000, 21V650000, 22V930000, 23V567000, 23V845000, 24V481000, and 24V812000.",
+            "ok": true
+          },
+          {
+            "question": "Give one NHTSA campaign number for a recall of the 2023 Volkswagen ID.4.",
+            "ground_truth": "any of 14 real campaigns",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 4.5,
+            "answer": "One NHTSA campaign number for a recall of the 2023 Volkswagen ID.4 is **22V823000** (rearview camera image may be blank/unresponsive in reverse)\u3010source: nhtsa_recalls tool result, campaign 22V823000\u3011.",
+            "ok": true
+          },
+          {
+            "question": "Decode VIN 5YJYGDEE3MF100000: what make, model and model year is it?",
+            "ground_truth": "Tesla Model Y 2021",
+            "tools_used": [
+              "decode_vin"
+            ],
+            "seconds": 3.8,
+            "answer": "**VIN Decode Result**\n- **VIN:** 5YJYGDEE3MF100000\n- **Make:** Tesla\n- **Model:** Model Y\n- **Model Year:** 2021\n- **Plant Country:** UNITED STATES (USA)\n\n*Source: decode_vin tool output*",
+            "ok": true
+          },
+          {
+            "question": "Does the 2022 Tesla Model Y have any NHTSA recall involving air bags? Give the campaign number(s) or say none.",
+            "ground_truth": "none",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 7.5,
+            "answer": "None. The NHTSA recalls for the 2022 Tesla Model Y (campaigns 22V037000, 21V912000, 22V045000, 22V050000, 22V063000, 22V235000, 22V296000, 22V702000) cover ADAS software, suspension knuckles, seat-belt chime, heat-pump/defrost software, Boombox/PWS sounds, infotainment CPU overheating, and power-window controls \u2014 none involve air bags.",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "question": "How many NHTSA recall campaigns exist for the 2022 Chevrolet Bolt EV? Reply with the number.",
+            "ground_truth": "7 campaigns",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 6.6,
+            "answer": "There are **7** NHTSA recall campaigns for the 2022 Chevrolet Bolt EV.\n\nSource: NHTSA recalls query for Chevrolet Bolt EV 2022 (campaigns: 21V517000, 21V650000, 22V930000, 23V567000, 23V845000, 24V481000, 24V812000).",
+            "ok": true
+          },
+          {
+            "question": "Give one NHTSA campaign number for a recall of the 2023 Volkswagen ID.4.",
+            "ground_truth": "any of 14 real campaigns",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 9.0,
+            "answer": "One NHTSA campaign number for a 2023 Volkswagen ID.4 recall is **22V830000** (dated 2022-11-09, component: Electrical System: Propulsion System: Traction Motor) [source: nhtsa_recalls tool result].",
+            "ok": true
+          },
+          {
+            "question": "Decode VIN 5YJYGDEE3MF100000: what make, model and model year is it?",
+            "ground_truth": "Tesla Model Y 2021",
+            "tools_used": [
+              "decode_vin"
+            ],
+            "seconds": 5.6,
+            "answer": "**VIN Decode Result**\n- **VIN:** 5YJYGDEE3MF100000\n- **Make:** Tesla\n- **Model:** Model Y\n- **Model Year:** 2021\n- **Plant Country:** United States (USA)\n\n*Source: decode_vin tool output*",
+            "ok": true
+          },
+          {
+            "question": "Does the 2022 Tesla Model Y have any NHTSA recall involving air bags? Give the campaign number(s) or say none.",
+            "ground_truth": "none",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 7.9,
+            "answer": "No NHTSA recalls involving air bags were found for the 2022 Tesla Model Y. The recalls returned cover ADAS software, suspension, seat\u2011belt chime, heat\u2011pump software, Boombox sound, CPU overheating, and power\u2011window controls \u2014 none reference air bags or restraint systems. [Source: nhtsa_recalls tool output for Tesla Model Y 2022]",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "question": "How many NHTSA recall campaigns exist for the 2022 Chevrolet Bolt EV? Reply with the number.",
+            "ground_truth": "7 campaigns",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 3.2,
+            "answer": "7",
+            "ok": true
+          },
+          {
+            "question": "Give one NHTSA campaign number for a recall of the 2023 Volkswagen ID.4.",
+            "ground_truth": "any of 14 real campaigns",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 5.1,
+            "answer": "One NHTSA campaign number for a 2023 Volkswagen ID.4 recall is **22V823000** (dated 2022-11-02, component: \"BACK OVER PREVENTION:DISPLAY FUNCTION\") [source: nhtsa_recalls tool result].",
+            "ok": true
+          },
+          {
+            "question": "Decode VIN 5YJYGDEE3MF100000: what make, model and model year is it?",
+            "ground_truth": "Tesla Model Y 2021",
+            "tools_used": [
+              "decode_vin"
+            ],
+            "seconds": 4.9,
+            "answer": "**VIN Decode Result**\n\n- **VIN:** 5YJYGDEE3MF100000\n- **Make:** Tesla\n- **Model:** Model Y\n- **Model Year:** 2021\n- **Plant Country:** United States (USA)\n\n*Source: decode_vin tool result*",
+            "ok": true
+          },
+          {
+            "question": "Does the 2022 Tesla Model Y have any NHTSA recall involving air bags? Give the campaign number(s) or say none.",
+            "ground_truth": "none",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 10.2,
+            "answer": "**Answer:** None.\n\n**Source:** NHTSA recalls for 2022 Tesla Model Y (via `nhtsa_recalls` tool) show 8 campaigns (22V037000, 21V912000, 22V045000, 22V050000, 22V063000, 22V235000, 22V296000, 22V702000). None list a component related to air bags; components cover ADAS software, suspension, seat-belt chime, heat-pump/defrost, pedestrian-warning sound, infotainment CPU, and power-window controls.",
+            "ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "4/4",
+        "4/4",
+        "4/4"
+      ]
+    },
+    {
+      "n": 8,
+      "scenario": "Analyst agent: refuses to invent facts",
+      "measures": "Says 'not found' for non-existent recalls/rules",
+      "correct": 9,
+      "total": 9,
+      "accuracy": 1.0,
+      "note": "3 runs: 3/3, 3/3, 3/3",
+      "details": [
+        [
+          {
+            "question": "Summarise NHTSA recall campaign 26V999000 for the 2024 Acme Zephyr.",
+            "tools_used": [
+              "search_findings",
+              "web_search",
+              "web_search",
+              "web_search",
+              "web_search"
+            ],
+            "seconds": 32.7,
+            "answer": "**No record found.**  \nMultiple searches of NHTSA\u2019s public recall database (both the main recall index and the PDF repository at `static.nhtsa.gov/odi/rcl/`) returned **zero hits for campaign number `26V999000`**. The results that did appear reference entirely different recalls (e.g., 16V384, 19V001, 24V199, 23V299, etc.) and involve Lincoln/Mercury Zephyr models from the 2006\u20132010 period\u2014not a 2024 Acme Zephyr.\n\n**Conclusion:** As of the latest available NHTSA data, recall campaign **26V999000 does not exist** for the 2024 Acme Zephyr (or any other vehicle).",
+            "ok": true
+          },
+          {
+            "question": "How many recalls does the 2031 Chevrolet Bolt EV have?",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 5.4,
+            "answer": "According to the NHTSA recalls database, there are **0 recalls** for the 2031 Chevrolet Bolt EV (the query returned an empty result set). Note that the watchlist only tracks model years 2019\u20132023 for this vehicle, so 2031 is outside the current monitoring scope.",
+            "ok": true
+          },
+          {
+            "question": "What fine did the EU Commission impose on Tesla under Regulation (EU) 2099/999?",
+            "tools_used": [
+              "search_findings",
+              "web_search",
+              "web_search",
+              "web_search",
+              "web_search"
+            ],
+            "seconds": 93.4,
+            "answer": "**Answer:** No such fine exists. The regulation cited\u2014**\u201cRegulation (EU) 2099/999\u201d**\u2014does not appear in the EU legal corpus, and no European Commission decision imposing a fine on Tesla under that instrument can be found.\n\n**What the searches show**\n\n| Search | Result |\n|--------|--------|\n| \u201cTesla EU Commission fine Regulation 2099/999\u201d | Zero hits. |\n| EUR-Lex for \u201c2099/999\u201d | No regulation with that number/year combination exists. The closest real instruments are:<br>\u2022 **Regulation (EC) No 999/2001** (animal feed / TSE rules)<br>\u2022 **Regulation (EU) 2020/2099** (tariff-rate quotas, agricultu",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "question": "Summarise NHTSA recall campaign 26V999000 for the 2024 Acme Zephyr.",
+            "tools_used": [
+              "search_findings",
+              "web_search",
+              "web_search",
+              "web_search",
+              "web_search"
+            ],
+            "seconds": 79.3,
+            "answer": "**Answer:** No record of NHTSA recall campaign **26V999000** for a **2024 Acme Zephyr** could be found in the NHTSA recall database or public campaign documents.\n\n**Evidence from searches:**\n- Direct searches for `\"26V999000 Acme Zephyr\"` and `\"26V999000 recall campaign\"` returned **zero results**.\n- Searches for `\"Acme Zephyr recall\"` and `\"2024 Acme Zephyr NHTSA\"` also returned **no matches**.\n- The only \u201cZephyr\u201d models appearing in NHTSA campaign PDFs are:\n  - Ford/Lincoln **2006 Zephyr** (part of Takata airbag recalls 16V384/19V001)\n  - Tiffin Motorhomes **Zephyr** motorhome (recall 24V-56",
+            "ok": true
+          },
+          {
+            "question": "How many recalls does the 2031 Chevrolet Bolt EV have?",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 11.5,
+            "answer": "The 2031 Chevrolet Bolt EV has **0 recalls** according to NHTSA data (empty result set).",
+            "ok": true
+          },
+          {
+            "question": "What fine did the EU Commission impose on Tesla under Regulation (EU) 2099/999?",
+            "tools_used": [
+              "web_search",
+              "web_search",
+              "web_search",
+              "web_search"
+            ],
+            "seconds": 76.4,
+            "answer": "Based on the research conducted, **there is no record of the EU Commission imposing any fine on Tesla under \"Regulation (EU) 2099/999\"** \u2014 and that regulation number does not correspond to any actual EU legal act.\n\n**Key findings:**\n\n| Search Focus | Result |\n|--------------|--------|\n| **\u201cRegulation (EU) 2099/999\u201d** | No such regulation exists in EUR-Lex. The closest matches are **Implementing Regulation (EU) 2020/2099** (tariff-rate quotas), **Decision (EU) 2023/2099** (Ireland/e-CODEX), and **Implementing Regulation (EU) 2026/2099** (cross-border health data) \u2014 none related to Tesla or fine",
+            "ok": true
+          }
+        ],
+        [
+          {
+            "question": "Summarise NHTSA recall campaign 26V999000 for the 2024 Acme Zephyr.",
+            "tools_used": [
+              "web_search",
+              "web_search",
+              "web_search",
+              "web_search"
+            ],
+            "seconds": 50.9,
+            "answer": "**No record found**\n\nAfter multiple searches of the NHTSA recall database (ODI/RCMN PDFs) and public recall indexes, **no recall campaign numbered `26V999000` exists**, and **no vehicle called the \u201c2024 Acme Zephyr\u201d appears in any NHTSA recall data**.\n\n- NHTSA campaign numbers follow a `YYV####` pattern (e.g., `23V299`, `24V093`); a `26V` prefix would imply a 2026 campaign, yet the vehicle in question is a 2024 model.  \n- \u201cAcme\u201d is not a recognized light-vehicle manufacturer in NHTSA\u2019s records, and \u201cZephyr\u201d has only been used historically by Ford/Lincoln/Mercury\u2014not by an \u201cAcme\u201d brand.  \n- Sea",
+            "ok": true
+          },
+          {
+            "question": "How many recalls does the 2031 Chevrolet Bolt EV have?",
+            "tools_used": [
+              "nhtsa_recalls"
+            ],
+            "seconds": 3.2,
+            "answer": "According to the NHTSA recalls database, there are **0 recalls** for the 2031 Chevrolet Bolt EV. The watchlist only covers model years 2019\u20132023, and 2031 is a future model year with no recall data available.\n\n**Source:** NHTSA recalls query for make=\"Chevrolet\", model=\"Bolt EV\", year=2031 returned an empty result set.",
+            "ok": true
+          },
+          {
+            "question": "What fine did the EU Commission impose on Tesla under Regulation (EU) 2099/999?",
+            "tools_used": [
+              "search_findings",
+              "web_search",
+              "web_search"
+            ],
+            "seconds": 31.8,
+            "answer": "**Answer:** There is no record of the European Commission imposing a fine on Tesla under \u201cRegulation (EU)\u202f2099/999.\u201d  \n\n**Why:**  \n- Searches for \u201cTesla EU Commission fine Regulation (EU) 2099/999\u201d return only unrelated EUR\u2011Lex entries (e.g., tariff\u2011rate quota rules under (EU)\u202f2020/2099 and a 2026 health\u2011data regulation under (EU)\u202f2026/2099).  \n- General searches for Tesla\u2011related EU penalties surface only industry\u2011wide CO\u2082\u2011emission penalty estimates, not a specific fine against Tesla.  \n- The citation \u201cRegulation (EU)\u202f2099/999\u201d does not correspond to any known EU legal act (EU regulations are",
+            "ok": true
+          }
+        ]
+      ],
+      "runs": [
+        "3/3",
+        "3/3",
+        "3/3"
+      ]
+    },
+    {
+      "n": 9,
+      "scenario": "Risk brief: citation faithfulness",
+      "measures": "Every [F#]/[S#]/campaign no. exists in the sources",
+      "correct": 25,
+      "total": 25,
+      "accuracy": 1.0,
+      "note": "on the latest real runs in the database",
+      "details": [
+        [
+          {
+            "run": 4,
+            "finding_refs": 7,
+            "invalid_finding_refs": [],
+            "signal_refs": [
+              1,
+              2,
+              3
+            ],
+            "signals_in_run": 3,
+            "campaign_numbers": 0,
+            "unsupported_campaign_numbers": [],
+            "watchlist_id": null
+          },
+          {
+            "run": 1,
+            "finding_refs": 13,
+            "invalid_finding_refs": [],
+            "signal_refs": [
+              1,
+              2
+            ],
+            "signals_in_run": 2,
+            "campaign_numbers": 0,
+            "unsupported_campaign_numbers": [],
+            "watchlist_id": null
+          }
+        ]
+      ],
+      "runs": [
+        "25/25"
+      ]
+    },
+    {
+      "n": 10,
+      "scenario": "Early warning: held-out historical backtest",
+      "measures": "Past recalls preceded by a flagged spike (120 days)",
+      "correct": 27,
+      "total": 100,
+      "accuracy": 0.27,
+      "note": "8 held-out vehicles. Alert precision 35/333 = 11%; by tier: Priority 18/80 = 22%, Watch 13/154 = 8%, Low 4/99 = 4%; median lead 120 days. Most recalls come from OEM testing, not owner complaints, so a high hit rate is not expected",
+      "details": [
+        {
+          "hits": 27,
+          "recalls": 100,
+          "hit_rate": 0.27,
+          "alerts": 333,
+          "confirmed": 35,
+          "precision": 0.10510510510510511,
+          "f1": 0.15130894243855575,
+          "median_lead_days": 120
+        }
+      ],
+      "runs": [
+        "27/100"
+      ]
+    }
+  ]
+}

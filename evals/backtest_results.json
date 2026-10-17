@@ -1,0 +1,94 @@
+{
+  "TRAIN": {
+    "naive": {
+      "hits": 49,
+      "recalls": 145,
+      "hit_rate": 0.33793103448275863,
+      "alerts": 406,
+      "confirmed": 64,
+      "precision": 0.15763546798029557,
+      "f1": 0.2149859463906218,
+      "median_lead_days": 120
+    },
+    "original": {
+      "hits": 22,
+      "recalls": 146,
+      "hit_rate": 0.1506849315068493,
+      "alerts": 317,
+      "confirmed": 32,
+      "precision": 0.10094637223974763,
+      "f1": 0.12089987978705136,
+      "median_lead_days": 113
+    },
+    "optimised": {
+      "hits": 35,
+      "recalls": 145,
+      "hit_rate": 0.2413793103448276,
+      "alerts": 271,
+      "confirmed": 51,
+      "precision": 0.1881918819188192,
+      "f1": 0.21149289099526067,
+      "median_lead_days": 113
+    },
+    "tiers": {
+      "Watch": [
+        24,
+        141
+      ],
+      "Low": [
+        12,
+        82
+      ],
+      "Priority": [
+        15,
+        48
+      ]
+    }
+  },
+  "TEST (held out)": {
+    "naive": {
+      "hits": 51,
+      "recalls": 100,
+      "hit_rate": 0.51,
+      "alerts": 537,
+      "confirmed": 65,
+      "precision": 0.12104283054003724,
+      "f1": 0.19565024935816092,
+      "median_lead_days": 120
+    },
+    "original": {
+      "hits": 17,
+      "recalls": 100,
+      "hit_rate": 0.17,
+      "alerts": 352,
+      "confirmed": 29,
+      "precision": 0.08238636363636363,
+      "f1": 0.1109860423232778,
+      "median_lead_days": 85
+    },
+    "optimised": {
+      "hits": 27,
+      "recalls": 100,
+      "hit_rate": 0.27,
+      "alerts": 333,
+      "confirmed": 35,
+      "precision": 0.10510510510510511,
+      "f1": 0.15130894243855575,
+      "median_lead_days": 120
+    },
+    "tiers": {
+      "Watch": [
+        13,
+        154
+      ],
+      "Low": [
+        4,
+        99
+      ],
+      "Priority": [
+        18,
+        80
+      ]
+    }
+  }
+}
