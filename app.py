@@ -39,8 +39,6 @@ except Exception:
 @st.cache_resource
 def get_db(path: str) -> DB:
     db = DB(path)
-    if demo_mode():  # a fresh public demo starts with real stored results instead of an empty dashboard
-        load_if_fresh(db, Path(__file__).parent / "demo" / "snapshot.json")
     ensure_default(db)
     return db
 
@@ -64,6 +62,8 @@ def cached_nhtsa(make: str, model: str, years: tuple) -> tuple[list, list]:
 
 settings = Settings()
 db = get_db(settings.db_path)
+if demo_mode():  # checked every run, so turning DEMO_MODE on later still loads the stored demo results
+    load_if_fresh(db, Path(__file__).parent / "demo" / "snapshot.json")
 
 # ---------------------------------------------------------------- Sidebar
 with st.sidebar:
