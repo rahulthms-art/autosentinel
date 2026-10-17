@@ -173,3 +173,19 @@ def test_cut_off_search_plan_is_salvaged(make_router, monkeypatch):
     router, _ = make_router([("plan web research", truncated)])
     pipeline.collect_web(router, Settings(tavily_api_key="y"), CFG, lambda m: None)
     assert list(dict.fromkeys(seen)) == ["EU battery regulation 2026", "UNECE R155 amendment"]  # each query also retried on trade press
+
+
+def test_analyst_can_use_rdw_and_tidies_citations(db, make_router, monkeypatch):
+    monkeypatch.setattr(analyst.rdw, "recalls", lambda make, model: [{
+        "ref": "MGP260096", "date": "2026-03-20", "category": "airbags", "risk": "serious",
+        "danger": "accident with injury", "defect": "Airbag kan niet goed werken.", "remedy": "Vervangen."}])
+    wl_id = db.save_watchlist("t", CFG)
+    replies = iter([
+        json.dumps({"tool": "rdw_recalls", "args": {"make": "Acme", "model": "Volt-X"}}),
+        json.dumps({"final": "Yes: RDW MGP260096 airbag recall【1†L1-L4】."}),
+    ])
+    router, _ = make_router([("analyst agent", lambda u: next(replies))])
+    steps = []
+    ans = analyst.ask(db, router, Settings(), wl_id, "Open airbag recalls in NL?", [], on_step=steps.append)
+    assert steps[0]["tool"] == "rdw_recalls" and "MGP260096" in steps[0]["observation"]
+    assert ans == "Yes: RDW MGP260096 airbag recall [1]."
