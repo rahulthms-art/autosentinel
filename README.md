@@ -2,7 +2,7 @@
 
 **An always-on agent platform that monitors vehicle recalls, regulation changes and supplier risk, and detects likely recalls *before* they are announced from spikes in owner complaints.**
 
-Built with **NVIDIA Nemotron** on **Nebius Token Factory**, **Tavily** live search and **NHTSA** official open data.
+Built with **NVIDIA Nemotron** on **Nebius Token Factory**, **Tavily** live search, and official open data from the **RDW** (Netherlands) and **NHTSA** (US).
 Hackathon track: **Best Apps and Agents**
 
 ---
@@ -23,13 +23,13 @@ Why not just ask a chatbot? A chatbot only answers when someone asks, knows noth
 | Capability | How |
 |---|---|
 | **Watchlists** | Save what you monitor: vehicles and model years, markets, components, suppliers, topics |
-| **Scheduled runs** | Each run collects official recalls (NHTSA API) and searches the web (Tavily, limited to official domains per market such as `ec.europa.eu`, `unece.org` and `gov.uk`) |
+| **Scheduled runs** | Each run collects official recalls from the **RDW** recall register (Netherlands) and the **NHTSA** API (US), then searches the web (Tavily, limited to official domains per market such as `ec.europa.eu`, `unece.org`, `rdw.nl` and `gov.uk`). Dutch recall texts are summarised in English by Nemotron |
 | **New-only** | Results are de-duplicated against earlier runs, so you see only what is **new** |
 | **Triage** | Nemotron (fast tier) scores relevance, type, severity, affected scope and recommended action. Irrelevant items are auto-dismissed. Rule-based severity floors (e.g. NHTSA *park outside*) cannot be lowered by the model |
 | **📈 Recall early warning** | Detects **owner-complaint spikes** per component against a 12-month baseline and flags spikes with **no matching recall**. Nemotron (reasoning tier) reads the complaint texts and names the likely failure mode, the risk and the next action |
 | **Risk brief** | Nemotron (reasoning tier) writes a cited brief: executive summary, risk table, signals and what to watch next |
 | **Findings workflow** | Mark findings new → acknowledged → actioned → dismissed |
-| **🚙 Fleet Check** | Upload a CSV of thousands of VINs: batch decode, then match recalls. Flags *do-not-drive* vehicles. Exports a CSV |
+| **🚙 Fleet Check** | Paste or upload **Dutch licence plates** to get each car's real recall status from the RDW (**open or repaired**), or VINs to match US recalls (NHTSA), with *do-not-drive* vehicles flagged. Exports a CSV |
 | **💬 Ask the Analyst** | A tool-using Nemotron agent (tracked findings, NHTSA recalls and complaints, live web, VIN decoder) that answers with citations |
 | **Alerts** | Slack / Teams webhook for new High-severity items and early-warning signals |
 | **🧾 Audit trail** | Every run and every model call is logged with model, latency and tokens |
@@ -126,7 +126,7 @@ Keys:
 - Nebius Token Factory: https://tokenfactory.nebius.com
 - Tavily: https://tavily.com
 
-The **Early Warning** charts and **Fleet Check** work without any keys, because NHTSA data is public.
+The **Early Warning** charts and **Fleet Check** work without any keys, because RDW and NHTSA data are public.
 
 Try Fleet Check with `sample_fleet.csv`.
 
@@ -172,7 +172,8 @@ evals/backtest.py      Early-warning backtest with a train/test split
 
 ## Limitations and honesty notes
 
-- **Official structured data is US-only (NHTSA).** Europe-wide recall data has no open API (UK DVSA bulk data was last refreshed years ago), so EU/UK coverage uses web search limited to official domains. Adding EU Safety Gate or OEM feeds is the next step.
+- **Official structured recall data covers the Netherlands (RDW) and the US (NHTSA).** The RDW is a type-approval authority for many manufacturers selling across the EU, so its register often reflects EU-wide campaigns. Other EU countries and the UK are covered by web search limited to official domains. EU Safety Gate and DVSA feeds are next.
+- **Owner-complaint data (for early warning) is US-only.** No European regulator publishes complaints openly, so early warning uses US complaints as a signal for global platforms.
 - Complaint spikes are **signals, not proof**. Low counts are noisy, which is why spikes require at least 3 complaints and at least 2× the baseline.
 - Fleet Check matches by make, model and year. Confirm remedy status per VIN on the OEM portal.
 - SQLite fits a single team. For multi-team production, swap in Postgres; the DB layer is isolated in `radar/db.py`.

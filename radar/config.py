@@ -34,6 +34,7 @@ class Settings:
 MARKET_DOMAINS = {
     "EU": ["ec.europa.eu", "eur-lex.europa.eu", "unece.org", "acea.auto"],
     "UK": ["gov.uk", "legislation.gov.uk", "smmt.co.uk"],
+    "NL": ["rdw.nl", "rijksoverheid.nl", "government.nl", "ilent.nl"],
     "US": ["nhtsa.gov", "federalregister.gov", "epa.gov"],
     "Canada": ["tc.canada.ca", "canada.ca"],
     "Japan": ["mlit.go.jp"],

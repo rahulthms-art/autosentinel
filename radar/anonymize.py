@@ -47,7 +47,8 @@ RE_URL = re.compile(r"https?://\S*")
 # Other regulators' public reference numbers (also look-up-able): Transport Canada, EU Safety Gate, UK DVSA
 RE_OTHER_REFS = [(re.compile(r"\b20\d{5}\b"), "•••••••"),   # Transport Canada: year + 3 digits
                  (re.compile(r"\bA\d{2}/\d{5}/\d{2}\b"), "A••/•••••/••"),
-                 (re.compile(r"\bR/\d{4}/\d{2,4}\b"), "R/••••/•••")]
+                 (re.compile(r"\bR/\d{4}/\d{2,4}\b"), "R/••••/•••"),
+                 (re.compile(r"\bMGP\d{6}\b"), "MGP••••••")]   # RDW (NL) recall references
 RE_MD_LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)]+)\)")
 
 
@@ -124,6 +125,10 @@ class Anonymizer:
         if not self.enabled:
             return f"{make} {model}"
         return f"{self.make(make)} {self.model_alias.get(model.lower(), 'vehicle')}"
+
+    def plate(self, p: str) -> str:
+        """Dutch licence plates identify a specific car: show only the last two characters."""
+        return f"••-••-{p[-2:]}" if self.enabled and p else p
 
     def frame(self, df):
         """Mask every text column of a DataFrame."""

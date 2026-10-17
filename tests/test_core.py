@@ -135,7 +135,7 @@ def test_interrupted_run_does_not_block_demo_snapshot():
     db.start_run(db.watchlists()[0]["id"])          # cut off by a restart
     assert db.mark_interrupted_runs() == 1
     assert load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")
-    assert [w["name"] for w in db.watchlists()] == ["EV segment watch (EU/UK/US)"]
+    assert [w["name"] for w in db.watchlists()] == ["EV segment watch (NL/EU/UK/US)"]
 
 
 def test_anonymizer_masks_brands_but_not_parts():
@@ -162,3 +162,40 @@ def test_legacy_demo_name_is_migrated():
     migrate_legacy(db)
     assert db.watchlists()[0]["name"] == "EV segment watch"
     assert db.runs(wl)[0]["stats"] == {"relevant": 3, "source": "snapshot"}
+
+
+def test_rdw_model_matching_and_plates():
+    from radar.fleet import split_ids
+    from radar.sources.rdw import category_en, clean_plate, model_matches
+    assert model_matches("ID4", "ID.4") and model_matches("MODEL Y", "Model Y")
+    assert model_matches("IONIQ", "Ioniq 5")          # family name covers newer variants
+    assert not model_matches("IONIQ 6", "Ioniq 5") and not model_matches("MODEL 3", "Model Y")
+    assert clean_plate("xr-132-g") == "XR132G" and clean_plate("123456") is None
+    vins, plates, bad = split_ids(["5YJYGDEE3MF100000", "XR-132-G", "hello"])
+    assert vins == ["5YJYGDEE3MF100000"] and plates == ["XR132G"] and bad == ["HELLO"]
+    assert category_en("elektrische installatie") == "electrical system" and category_en("reminrichting") == "brakes"
+
+
+def test_search_query_and_market_cleanup():
+    from radar.pipeline import clean_market, clean_query
+    assert clean_query("Tesla Model Y recall OR safety campaign NOT US NOT NL") == "Tesla Model Y recall safety campaign"
+    assert clean_query('"EU battery regulation" -draft 2026') == "EU battery regulation 2026"
+    assert clean_market("EU|UK") == "EU" and clean_market("Netherlands") == "Global" and clean_market("NL") == "NL"
+
+
+def test_newer_snapshot_replaces_older_but_never_live_runs(tmp_path):
+    import json as _json
+    from radar.db import DB
+    from radar.snapshot import load_if_fresh
+    src = _json.loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "demo" / "snapshot.json").read_text())
+    p = tmp_path / "s.json"
+    db = DB(":memory:")
+    p.write_text(_json.dumps({**src, "version": "v1"}))
+    assert load_if_fresh(db, p) and not load_if_fresh(db, p)          # same version: no-op
+    p.write_text(_json.dumps({**src, "version": "v2"}))
+    assert load_if_fresh(db, p) and len(db.watchlists()) == 1          # newer snapshot swapped in
+    wl = db.watchlists()[0]["id"]
+    rid = db.start_run(wl)
+    db.finish_run(rid, "ok", {"relevant": 1})                          # a real live run
+    p.write_text(_json.dumps({**src, "version": "v3"}))
+    assert not load_if_fresh(db, p)                                     # live data is kept

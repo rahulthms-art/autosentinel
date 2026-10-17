@@ -31,7 +31,13 @@ RULES = [
 ]
 
 
-def _patch_sources(monkeypatch, web_results):
+RDW_RECALL = {"ref": "MGP260096", "date": "2026-03-20", "category": "electrical system",
+              "defect": "Accu kan oververhit raken.", "consequence": "Brand.", "remedy": "Software update.",
+              "risk": "serious", "danger_code": "BRA", "danger": "fire with injury"}
+
+
+def _patch_sources(monkeypatch, web_results, rdw_recalls=()):
+    monkeypatch.setattr(pipeline.rdw, "recalls", lambda *a, **k: [dict(r) for r in rdw_recalls])
     monkeypatch.setattr(pipeline.nhtsa, "recalls", lambda *a: [dict(RECALL)])
     monkeypatch.setattr(pipeline.nhtsa, "complaints", lambda *a: [])
     monkeypatch.setattr(pipeline.web, "search", lambda *a, **k: list(web_results))
@@ -136,3 +142,34 @@ def test_triage_rejects_misaligned_and_degenerate_verdicts(make_router):
     items = [{"source": "web", "title": f"t{i}", "summary": "s", "severity": None} for i in range(2)]
     pipeline.triage(router, CFG, items, lambda m: None)
     assert all(it["score"] == 8 for it in items)  # both came from the final reasoning retry
+
+
+def test_rdw_recalls_become_findings_with_english_summary(db, make_router, monkeypatch):
+    _patch_sources(monkeypatch, [], rdw_recalls=[RDW_RECALL])
+    wl_id = db.save_watchlist("t", {**CFG, "markets": ["NL"]})
+    settings = Settings(nebius_api_key="x", tavily_api_key="y", db_path=":memory:", alert_webhook="")
+    router, _ = make_router(RULES)
+    pipeline.run_watchlist(db, router, settings, wl_id)
+    f = {x["key"]: x for x in db.findings(wl_id)}["rdw:MGP260096"]
+    assert f["market"] == "NL" and f["type"] == "recall" and f["severity"] == "High"  # RDW 'serious' floor
+    assert f["summary"] == "s"  # Dutch text replaced by the model's English summary
+    assert "Electrical system" in f["title"]
+
+
+def test_unreadable_search_plan_falls_back_to_standard_queries(make_router, monkeypatch):
+    seen = []
+    monkeypatch.setattr(pipeline.web, "search", lambda key, q, **k: seen.append(q) or [])
+    router, _ = make_router([("plan web research", "not json at all")])
+    settings = Settings(tavily_api_key="y")
+    pipeline.collect_web(router, settings, CFG, lambda m: None)
+    assert seen and any("Leaf" in q or "Volt-X" in q for q in seen)  # standard per-vehicle queries ran
+
+
+def test_cut_off_search_plan_is_salvaged(make_router, monkeypatch):
+    seen = []
+    monkeypatch.setattr(pipeline.web, "search", lambda key, q, **k: seen.append(q) or [])
+    truncated = ('{"queries": [{"query": "EU battery regulation 2026", "topic": "Regulations", "market": "EU"}, '
+                 '{"query": "UNECE R155 amendment", "topic": "Regulations", "market": "EU"}, {"query": "Tesla Mod')
+    router, _ = make_router([("plan web research", truncated)])
+    pipeline.collect_web(router, Settings(tavily_api_key="y"), CFG, lambda m: None)
+    assert list(dict.fromkeys(seen)) == ["EU battery regulation 2026", "UNECE R155 amendment"]  # each query also retried on trade press

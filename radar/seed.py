@@ -11,7 +11,7 @@ DEFAULT = {
         {"make": "Hyundai", "model": "Ioniq 5", "years": [2022, 2023, 2024, 2025]},
         {"make": "Volkswagen", "model": "ID.4", "years": [2021, 2022, 2023, 2024, 2025]},
     ],
-    "markets": ["EU", "UK", "US"],
+    "markets": ["NL", "EU", "UK", "US"],
     "components": "HV battery, airbags, brakes, ADAS cameras & radar, infotainment / OTA software",
     "suppliers": "battery cell suppliers, airbag inflator suppliers, semiconductor suppliers",
     "topics": ["Recalls", "Regulations", "Supplier risk", "Early warning"],
@@ -21,4 +21,4 @@ DEFAULT = {
 
 def ensure_default(db: DB) -> None:
     if not db.watchlists():
-        db.save_watchlist("EV segment watch (EU/UK/US)", DEFAULT)
+        db.save_watchlist("EV segment watch (NL/EU/UK/US)", DEFAULT)

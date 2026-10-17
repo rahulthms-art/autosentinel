@@ -18,7 +18,9 @@ def export(db: DB, wl_id: int) -> dict:
     wl = db.watchlist(wl_id)
     runs = [r for r in db.runs(wl_id, limit=1000) if r["status"] == "ok"]
     run_ids = [r["id"] for r in runs]
+    from .db import now
     return {
+        "version": now(),
         "watchlist": {"name": wl["name"], "config": wl["config"]},
         "runs": runs,
         "findings": db.q("SELECT * FROM findings WHERE watchlist_id=?", (wl_id,)),
@@ -36,7 +38,8 @@ def import_snapshot(db: DB, data: dict) -> int:
             run_map[r["id"]] = c.execute(
                 "INSERT INTO runs (watchlist_id, started_at, finished_at, status, stats, brief, error) "
                 "VALUES (?,?,?,?,?,?,?)", (wl_id, r["started_at"], r["finished_at"], r["status"],
-                                           json.dumps({**r["stats"], "source": "snapshot"}), r["brief"],
+                                           json.dumps({**r["stats"], "source": "snapshot",
+                                                       "snapshot_version": data.get("version")}), r["brief"],
                                            r["error"])).lastrowid
         fcols = ["key", "source", "type", "title", "url", "summary", "published", "market", "severity", "score",
                  "affected", "action", "status", "first_seen", "raw"]
@@ -70,12 +73,19 @@ def migrate_legacy(db: DB) -> None:
 
 
 def load_if_fresh(db: DB, path: Path) -> bool:
-    """Import the snapshot once, into a deployment with no successful run of its own."""
-    if not path.exists() or db.q("SELECT 1 FROM runs WHERE status='ok' LIMIT 1"):
+    """Import the snapshot into a deployment with no successful live run of its own. A deployment that
+    only holds an older snapshot gets the newer one; results of live runs are never replaced."""
+    if not path.exists():
+        return False
+    ok = [json.loads(r["stats"] or "{}") for r in db.q("SELECT stats FROM runs WHERE status='ok'")]
+    if any(s.get("source") != "snapshot" for s in ok):
+        return False
+    data = json.loads(path.read_text())
+    if ok and {s.get("snapshot_version") for s in ok} == {data.get("version")}:
         return False
     for w in db.watchlists():  # only empty starter watchlists (and failed runs) exist: replace them
         db.delete_watchlist(w["id"])
-    import_snapshot(db, json.loads(path.read_text()))
+    import_snapshot(db, data)
     return True
 
 

@@ -25,6 +25,7 @@ from radar.seed import ensure_default
 from radar.snapshot import load_if_fresh, migrate_legacy
 from radar.signals import detect_spikes, monthly_series, recall_data_suspect
 from radar.sources import nhtsa
+from radar.sources import rdw as rdw_source
 
 st.set_page_config(page_title="AutoSentinel Radar", page_icon=":material/radar:", layout="wide")
 ui.inject_css()
@@ -331,40 +332,76 @@ if section == SECTIONS[1]:
 if section == SECTIONS[2]:
     ui.eyebrow("Fleet exposure")
     st.title("Fleet recall check", anchor=False)
-    st.caption("Upload a CSV with a `VIN` column (fleet, dealer stock, customer base) or paste VINs. "
-               "Every VIN is decoded and matched to official recalls.")
+    st.caption("Upload a CSV or paste **Dutch licence plates** or **VINs**, one per line (fleet, lease portfolio, "
+               "dealer stock). Plates get each car's real recall status from the RDW (open or repaired); VINs are "
+               "decoded and matched to US recalls (NHTSA).")
+    st.session_state.setdefault("fleet_input", "")
     c1, c2 = st.columns(2)
-    up = c1.file_uploader("CSV with a VIN column", type=["csv"])
-    pasted = c2.text_area("Or paste VINs, one per line", height=120)
+    up = c1.file_uploader("CSV with a plate or VIN column", type=["csv"])
+    if c1.button("Load sample Dutch plates", icon=":material/directions_car:",
+                 help="Fetches a few real registered EVs from the RDW register, live. Nothing is stored."):
+        with st.spinner("Fetching sample plates from the RDW..."):
+            sample = []
+            for mk, md in (("TESLA", "MODEL Y"), ("VOLKSWAGEN", "ID.4"), ("HYUNDAI", "IONIQ5")):
+                try:
+                    sample += rdw_source.sample_plates(mk, md, 3) + rdw_source.sample_plates(mk, md, 1, with_open_recall=False)
+                except Exception:
+                    pass
+        st.session_state.fleet_input = "\n".join(sample)
+    if anon and st.session_state.fleet_input:  # never show real plates/VINs while anonymized
+        pasted = st.session_state.fleet_input
+        ids = [x for x in pasted.splitlines() if x.strip()]
+        c2.markdown("**Loaded vehicles**  \n" + ", ".join(A.plate(x) if len(x) <= 8 else A(x) for x in ids))
+        if c2.button("Clear", icon=":material/close:"):
+            st.session_state.fleet_input = ""
+            st.rerun()
+    else:
+        pasted = c2.text_area("Or paste plates / VINs", key="fleet_input", height=140)
     raw = []
     if up is not None:
         frame = pd.read_csv(up, dtype=str)
-        col = next((c for c in frame.columns if c.strip().lower() == "vin"), frame.columns[0])
+        col = next((c for c in frame.columns if c.strip().lower() in ("vin", "kenteken", "plate", "licence plate",
+                                                                       "license plate")), frame.columns[0])
         raw += frame[col].dropna().tolist()
     raw += pasted.splitlines()
-    vins, bad = fleet.clean_vins(raw)
-    st.caption(f"{len(vins)} valid VINs" + (f" · {len(bad)} invalid skipped" if bad else ""))
-    if st.button("Check fleet", icon=":material/search:", type="primary", disabled=not vins):
-        if len(vins) > 2000:
-            st.warning("Checking the first 2,000 VINs.", icon=":material/warning:")
-            vins = vins[:2000]
+    vins, plates, bad = fleet.split_ids(raw)
+    st.caption(f"{len(plates)} Dutch plates · {len(vins)} VINs" + (f" · {len(bad)} unrecognised" if bad else ""))
+    if st.button("Check fleet", icon=":material/search:", type="primary", disabled=not (vins or plates)):
+        vins, plates = vins[:2000], plates[:2000]
         with st.status("Checking...", expanded=False) as status:
-            rows = fleet.check_fleet(vins, progress=lambda m: st.write(A(m)))
+            plate_rows = fleet.check_plates(plates, progress=lambda m: st.write(A(m))) if plates else []
+            vin_rows = fleet.check_fleet(vins, progress=lambda m: st.write(A(m))) if vins else []
             status.update(label="Done", state="complete")
-        df = pd.DataFrame(rows)
-        df["Do-not-drive / park outside"] = df["Do-not-drive / park outside"].map({True: "▲ Yes", False: "No"})
-        m = st.columns(3)
-        m[0].metric("Vehicles", len(df), border=True)
-        m[1].metric("With ≥ 1 recall", int((df["Recalls"] > 0).sum()), border=True)
-        m[2].metric("Do-not-drive / park outside", int((df["Do-not-drive / park outside"] != "No").sum()), border=True)
-        if anon:  # makes/models outside the watchlist still get neutral aliases
-            df["Make"] = df["Make"].map(A.make)
-            df["Model"] = df["Model"].map(lambda m: A(m) if A(m) != m else "Model")
-        df = A.frame(df)
-        st.dataframe(df, hide_index=True, width="stretch")
-        st.download_button("Export results (CSV)", df.to_csv(index=False), icon=":material/download:",
-                           file_name="fleet-recall-exposure.csv")
-        st.caption("Matches recalls by make, model and year (NHTSA, US). Confirm per-VIN remedy status on the OEM portal.")
+        if plate_rows:
+            pdf = pd.DataFrame(plate_rows)
+            m = st.columns(3)
+            m[0].metric("Dutch vehicles", len(pdf), border=True)
+            m[1].metric("With an open recall", int((pdf["Open recalls"] > 0).sum()), border=True)
+            m[2].metric("Recalls already repaired", int(pdf["Repaired"].sum()), border=True)
+            if anon:
+                pdf["ID"] = pdf["ID"].map(A.plate)
+                pdf["Make"] = pdf["Make"].map(lambda x: A.make(x) if x else x)
+                pdf["Model"] = pdf["Model"].map(lambda x: "Model" if x else x)
+            pdf = A.frame(pdf.rename(columns={"ID": "Plate"}))
+            st.dataframe(pdf, hide_index=True, width="stretch")
+            st.download_button("Export Dutch results (CSV)", pdf.to_csv(index=False), icon=":material/download:",
+                               file_name="fleet-recalls-nl.csv")
+            st.caption("Source: RDW recall register, status per licence plate (open = not yet repaired).")
+        if vin_rows:
+            df = pd.DataFrame(vin_rows)
+            df["Do-not-drive / park outside"] = df["Do-not-drive / park outside"].map({True: "▲ Yes", False: "No"})
+            m = st.columns(3)
+            m[0].metric("Vehicles (VIN)", len(df), border=True)
+            m[1].metric("With ≥ 1 recall", int((df["Recalls"] > 0).sum()), border=True)
+            m[2].metric("Do-not-drive / park outside", int((df["Do-not-drive / park outside"] != "No").sum()), border=True)
+            if anon:  # makes/models outside the watchlist still get neutral aliases
+                df["Make"] = df["Make"].map(A.make)
+                df["Model"] = df["Model"].map(lambda m: A(m) if A(m) != m else "Model")
+            df = A.frame(df)
+            st.dataframe(df, hide_index=True, width="stretch")
+            st.download_button("Export VIN results (CSV)", df.to_csv(index=False), icon=":material/download:",
+                               file_name="fleet-recall-exposure.csv")
+            st.caption("Matches recalls by make, model and year (NHTSA, US). Confirm per-VIN remedy status on the OEM portal.")
 
 # ---------------------------------------------------------------- Analyst
 if section == SECTIONS[3]:

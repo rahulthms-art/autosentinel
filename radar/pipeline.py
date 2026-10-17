@@ -10,21 +10,25 @@ from typing import Callable
 from . import alerts
 from .config import EXCLUDE_DOMAINS, GLOBAL_DOMAINS, MARKET_DOMAINS, SUPPLIER_DOMAINS, TRADE_PRESS, Settings
 from .db import DB
-from .llm import Router
+from .llm import Router, parse_json
 from .signals import detect_spikes, recall_data_suspect
-from .sources import nhtsa, web
+from .sources import nhtsa, rdw, web
 
 log = logging.getLogger("radar")
 SEV_RANK = {"High": 0, "Medium": 1, "Low": 2}
 
 PLANNER = """You plan web research for an automotive compliance & quality team.
 Given a watch profile, write 6-10 precise search queries covering the requested topics and markets:
-- Recalls: safety recalls/campaigns for the watched vehicles and components outside the US
-  (EU Safety Gate, UK DVSA, KBA, Transport Canada...). US recalls are already covered by the NHTSA API.
+- Recalls: safety recalls/campaigns for the watched vehicles and components outside the US and the Netherlands
+  (EU Safety Gate, UK DVSA, KBA, Transport Canada...). US recalls (NHTSA) and Dutch recalls (RDW) are already
+  covered by official APIs.
 - Regulations: new/changed rules and deadlines (UNECE WP.29 UN R-series, EU type-approval, GSR2, Euro 7,
   CO2 fleet targets, R155/R156 cybersecurity, EU Battery Regulation, Data Act...) relevant to the profile.
 - Supplier risk: quality problems, shortages, insolvencies, plant fires, sanctions for the watched suppliers/components.
-Return {"queries": [{"query": "...", "topic": "Recalls|Regulations|Supplier risk", "market": "EU|UK|US|...|Global"}]}"""
+Write at most 10 queries, each under 15 words, as plain natural-language search phrases:
+no boolean operators (AND, OR, NOT), no quotes, no minus signs.
+"market" must be exactly one of: EU, UK, NL, US, Canada, Japan, Australia, Global.
+Return {"queries": [{"query": "...", "topic": "Recalls|Regulations|Supplier risk", "market": "EU"}]}"""
 
 TRIAGE = """You triage items for an automotive compliance & quality team. For EACH numbered item decide,
 strictly against the watch profile:
@@ -36,6 +40,7 @@ strictly against the watch profile:
 - summary: one factual sentence
 - ref: the first 3 words of the item's title, copied exactly (used to check alignment)
 Every item gets a verdict, including irrelevant ones (score 0, type other, severity Low).
+Some items are in Dutch (RDW): always write affected, action and summary in English.
 Return {"items": [{"id": 1, "ref": "", "score": 0, "type": "", "severity": "", "affected": "", "action": "", "summary": ""}]}"""
 
 SIGNAL_ANALYST = """You are a vehicle safety defect investigator. Below are recent owner complaints that make up a
@@ -104,16 +109,81 @@ def collect_nhtsa(cfg: dict, progress) -> tuple[list[dict], dict]:
     return list(findings.values()), per_vehicle
 
 
+def collect_rdw(cfg: dict, progress) -> list[dict]:
+    """Official Dutch recalls (RDW register) for the watched vehicles, since their first model year."""
+    findings = {}
+    for v in cfg.get("vehicles", []):
+        years = v.get("years") or [2000]
+        progress(f"RDW: {v['make']} {v['model']}")
+        try:
+            recs = rdw.recalls(v["make"], v["model"], since=date(min(years), 1, 1))
+        except Exception as e:
+            log.warning("RDW failed for %s %s: %s", v["make"], v["model"], e)
+            continue
+        for r in recs:
+            findings.setdefault(f"rdw:{r['ref']}", {
+                "key": f"rdw:{r['ref']}", "source": "rdw", "type": "recall", "market": "NL",
+                "title": f"RDW {r['ref']}: {v['make']} {v['model']}: {r['category'].capitalize()}",
+                "url": f"https://opendata.rdw.nl/resource/j9yg-7rg9.json?referentiecode_rdw={r['ref']}",
+                "summary": f"{r['defect']} Gevolg: {r['consequence']} Herstel: {r['remedy']}"[:1400],
+                "published": r["date"], "severity": rdw.recall_severity(r), "raw": r,
+            })
+    return list(findings.values())
+
+
+VALID_MARKETS = {"EU", "UK", "NL", "US", "Canada", "Japan", "Australia", "Global"}
+
+
+def clean_query(q: str) -> str:
+    """Search engines read boolean operators literally: drop them (and NOT-ed terms) even if the model adds them."""
+    q = re.sub(r"\bNOT\s+\S+", " ", q)
+    q = re.sub(r"\b(AND|OR)\b|[\"()]|(?<!\w)-\w+", " ", q)
+    return re.sub(r"\s+", " ", q).strip()
+
+
+def clean_market(m) -> str:
+    for part in re.split(r"[|/,\s]+", str(m or "")):
+        if part in VALID_MARKETS:
+            return part
+    return "Global"
+
+
+def fallback_queries(cfg: dict) -> list[dict]:
+    """Plain, deterministic searches used when the model's plan is unusable."""
+    year = date.today().year
+    qs = []
+    for v in cfg.get("vehicles", [])[:4]:
+        qs.append({"query": f"{v['make']} {v['model']} recall Europe {year}", "topic": "Recalls", "market": "EU"})
+    if "Regulations" in cfg.get("topics", []):
+        qs.append({"query": f"EU vehicle type-approval regulation update {year}", "topic": "Regulations", "market": "EU"})
+        qs.append({"query": f"UNECE WP.29 new UN regulation amendments {year}", "topic": "Regulations", "market": "EU"})
+    if "Supplier risk" in cfg.get("topics", []) and cfg.get("components"):
+        qs.append({"query": f"automotive supplier shortage {cfg['components'].split(',')[0]} {year}",
+                   "topic": "Supplier risk", "market": "Global"})
+    return qs
+
+
 def collect_web(router: Router, settings: Settings, cfg: dict, progress, errors: list | None = None) -> list[dict]:
-    plan = router.json("fast", "Plan web research", PLANNER, _profile_text(cfg), default={"queries": []})
-    queries = plan.get("queries", []) if isinstance(plan, dict) else plan
-    queries = [q if isinstance(q, dict) else {"query": q} for q in queries if q][:10]
+    def plan(thinking=None):
+        text = router.chat("fast", "Plan web research", PLANNER + "\n\nRespond with valid JSON only.",
+                           _profile_text(cfg), temperature=0.0, max_tokens=4096, thinking=thinking)
+        p = parse_json(text, None)
+        qs = p.get("queries", []) if isinstance(p, dict) else p
+        if not isinstance(qs, list) or not qs:  # cut-off or malformed JSON: salvage the complete query objects
+            qs = [{"query": m.group(1), "topic": m.group(2), "market": m.group(3)} for m in re.finditer(
+                r'"query"\s*:\s*"([^"]{3,200})"\s*,\s*"topic"\s*:\s*"([^"]*)"\s*,\s*"market"\s*:\s*"([^"]*)"', text)]
+        return [q if isinstance(q, dict) else {"query": q} for q in qs if q][:10]
+
+    queries = plan() or plan(thinking=True)  # an unreadable plan must not silently skip all web research
+    if not queries:
+        queries = fallback_queries(cfg)
+        progress("Search plan unavailable: using standard queries")
     out: dict[str, dict] = {}
     for q in queries:
-        text = q.get("query")
-        if not isinstance(text, str) or not text.strip():
+        text = clean_query(q.get("query") or "") if isinstance(q.get("query"), str) else ""
+        if not text:
             continue
-        market = q.get("market") or "Global"
+        market = clean_market(q.get("market"))
         topic = q.get("topic") or ""
         domains = SUPPLIER_DOMAINS if topic == "Supplier risk" else MARKET_DOMAINS.get(market, GLOBAL_DOMAINS)
         progress(f"Tavily: {text}")
@@ -202,7 +272,7 @@ def triage(router: Router, cfg: dict, items: list[dict], progress, batch: int = 
         it["severity"] = min([s for s in (floor, llm_sev) if s], key=SEV_RANK.get)
         it["affected"] = str(r.get("affected", ""))[:300]
         it["action"] = str(r.get("action", ""))[:300]
-        if it["source"] == "web" and r.get("summary"):
+        if it["source"] in ("web", "rdw") and r.get("summary"):  # RDW texts are Dutch: keep the English summary
             it["summary"] = str(r["summary"])[:600]
         if it["score"] < 4 and it["source"] == "web":
             it["status"] = "dismissed"  # stored so it is never re-triaged, hidden by default
@@ -257,13 +327,17 @@ def run_watchlist(db: DB, router: Router, settings: Settings, wl_id: int,
     router.on_call = lambda rec: db.log_llm(run_id, rec)
     try:
         known = db.known_keys(wl_id)
-        items, per_vehicle, web_errors = [], {}, []
+        items, per_vehicle, web_errors, web_count = [], {}, [], 0
         if "Recalls" in topics or "Early warning" in topics:
             nh_items, per_vehicle = collect_nhtsa(cfg, progress)
             if "Recalls" in topics:
                 items += nh_items
+        if "Recalls" in topics and set(cfg.get("markets", [])) & {"NL", "EU"}:
+            items += collect_rdw(cfg, progress)
         if settings.tavily_api_key and set(topics) & {"Recalls", "Regulations", "Supplier risk"}:
-            items += collect_web(router, settings, cfg, progress, errors=web_errors)
+            web_items = collect_web(router, settings, cfg, progress, errors=web_errors)
+            web_count = len(web_items)
+            items += web_items
         new_items = [it for it in items if it["key"] not in known]
         progress(f"{len(items)} items collected, {len(new_items)} new")
 
@@ -288,7 +362,7 @@ def run_watchlist(db: DB, router: Router, settings: Settings, wl_id: int,
             "high": sum(f["severity"] == "High" for f in relevant),
             "signals": len(signals), "unrecalled_signals": sum(not s["recalled"] for s in signals),
             "priority_signals": sum(not s["recalled"] and s["priority"] == "Priority" for s in signals),
-            "web_search_errors": len(web_errors),
+            "web_search_errors": len(web_errors), "web_results": web_count,
             "llm_calls": len(router.trace),
             "tokens": sum((c.get("prompt_tokens") or 0) + (c.get("completion_tokens") or 0) for c in router.trace),
         }

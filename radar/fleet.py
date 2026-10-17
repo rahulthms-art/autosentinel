@@ -3,9 +3,40 @@ from __future__ import annotations
 
 import re
 
-from .sources import nhtsa
+from .sources import nhtsa, rdw
 
 VIN_RE = re.compile(r"^[A-HJ-NPR-Z0-9]{17}$")
+
+
+def split_ids(raw: list[str]) -> tuple[list[str], list[str], list[str]]:
+    """Sort pasted/uploaded identifiers into VINs, Dutch licence plates and unrecognised entries."""
+    vins, plates, bad = [], [], []
+    for v in raw:
+        s = str(v).strip().upper()
+        if not s:
+            continue
+        if VIN_RE.match(s):
+            vins.append(s)
+        elif rdw.clean_plate(s):
+            plates.append(rdw.clean_plate(s))
+        else:
+            bad.append(s)
+    return list(dict.fromkeys(vins)), list(dict.fromkeys(plates)), bad
+
+
+def check_plates(plates: list[str], progress=lambda m: None) -> list[dict]:
+    """Dutch fleet: real per-vehicle recall status from the RDW (open vs repaired)."""
+    progress(f"RDW: checking {len(plates)} licence plates")
+    rows = []
+    for r in rdw.check_plates(plates):
+        rows.append({
+            "ID": r["plate"], "Source": "RDW (NL)", "Make": r["make"], "Model": r["model"],
+            "Year": r["first_registered"][:4], "Open recalls": len(r["open"]),
+            "Repaired": len(r["repaired"]),
+            "Status": ("▲ Open recall" if r["open"] else "Up to date") if r["found"] else "Not found",
+            "Campaigns": ", ".join(r["open"]),
+        })
+    return rows
 
 
 def clean_vins(raw: list[str]) -> tuple[list[str], list[str]]:
