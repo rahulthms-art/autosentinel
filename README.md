@@ -96,6 +96,16 @@ Tested and rejected: a Poisson significance gate, a fleet-growth adjustment, and
 - A naive rule (alert on any component with 3+ complaints) catches more recalls at similar precision. The app offers it as *High sensitivity*.
 - Early warning ranks leads for a quality team to investigate. It is not a recall predictor.
 
+## Cost control
+
+Every Nemotron call is priced and logged. The sidebar shows the estimated spend, and **Runs & audit** shows the cost of each run.
+- **Typical cost:** about $0.05 per radar run and about $0.03 per analyst question, using a cautious Ultra price estimate.
+- **Hard stop:** `BUDGET_USD` (default $10) blocks AI calls once the estimated spend for the deployment reaches it.
+- **Public demo** (`DEMO_MODE=1`):
+  - It starts with real stored results (`demo/snapshot.json`), so visitors see the full product without spending anything.
+  - It is capped at 3 radar runs and 8 analyst questions per day.
+- **Prices:** set real prices from your Token Factory prices page with `PRICE_NANO`, `PRICE_ULTRA` and similar, as `"input,output"` in USD per 1M tokens.
+
 ## Run locally
 
 ```bash

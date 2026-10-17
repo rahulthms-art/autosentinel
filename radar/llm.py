@@ -35,11 +35,13 @@ def pick_default(models: list[str], preferences: list[str]) -> str | None:
 
 class Router:
     def __init__(self, client: OpenAI, fast_model: str, deep_model: str,
-                 on_call: Callable[[dict], None] | None = None):
+                 on_call: Callable[[dict], None] | None = None,
+                 before_call: Callable[[], None] | None = None):
         self.client = client
         self.fast = fast_model
         self.deep = deep_model
         self.on_call = on_call or (lambda rec: None)
+        self.before_call = before_call or (lambda: None)  # e.g. budget guard; raises to block the call
         self.trace: list[dict] = []
         # Fast tier runs with Nemotron's reasoning switched off: ~16x fewer tokens for
         # structured planning/triage. Disabled automatically if a model rejects the flag.
@@ -47,6 +49,7 @@ class Router:
 
     def chat(self, tier: str, step: str, system: str, user: str,
              temperature: float = 0.2, max_tokens: int | None = None, thinking: bool | None = None) -> str:
+        self.before_call()
         model = self.deep if tier == "deep" else self.fast
         max_tokens = max_tokens or (4096 if tier == "deep" else 2048)
         rec = {"step": step, "model": model, "tier": tier, "ok": False}

@@ -63,6 +63,11 @@ CREATE TABLE IF NOT EXISTS llm_calls (
     step TEXT, model TEXT, seconds REAL,
     prompt_tokens INTEGER, completion_tokens INTEGER, ok INTEGER, error TEXT
 );
+CREATE TABLE IF NOT EXISTS usage_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,                -- run | question
+    at TEXT NOT NULL
+);
 CREATE INDEX IF NOT EXISTS ix_findings_wl ON findings(watchlist_id, first_seen);
 """
 
@@ -193,6 +198,10 @@ class DB:
                       " ok, error) VALUES (?,?,?,?,?,?,?,?,?)",
                       (run_id, now(), rec["step"], rec["model"], rec["seconds"], rec.get("prompt_tokens"),
                        rec.get("completion_tokens"), int(rec["ok"]), rec.get("error")))
+
+    def add_usage(self, kind: str):
+        with self.tx() as c:
+            c.execute("INSERT INTO usage_events (kind, at) VALUES (?, ?)", (kind, now()))
 
     def llm_calls(self, run_id: int) -> list[dict]:
         return self.q("SELECT step, model, seconds, prompt_tokens, completion_tokens, ok, error "

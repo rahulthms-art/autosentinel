@@ -16,6 +16,7 @@ import sys
 from radar.config import Settings
 from radar.db import DB
 from radar.llm import Router, list_nvidia_models, make_client, pick_default
+from radar.budget import Guard
 from radar.pipeline import run_watchlist
 from radar.seed import ensure_default
 
@@ -45,7 +46,8 @@ def main(argv=None) -> int:
     for wl in targets:
         log.info("Running watchlist %s: %s", wl["id"], wl["name"])
         try:
-            out = run_watchlist(db, Router(client, s.fast_model, s.deep_model), s, wl["id"], progress=log.info)
+            router = Router(client, s.fast_model, s.deep_model, before_call=Guard(db).check_budget)
+            out = run_watchlist(db, router, s, wl["id"], progress=log.info)
             log.info("Done: %s", json.dumps(out["stats"]))
         except Exception:
             log.exception("Watchlist %s failed", wl["id"])

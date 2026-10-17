@@ -8,17 +8,20 @@ Run:  streamlit run app.py
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
 import ui
 from radar import analyst, fleet
+from radar.budget import BudgetExceeded, Guard, LimitReached, budget_usd, call_cost, demo_mode
 from radar.config import TOPICS, Settings
 from radar.db import DB
 from radar.llm import Router, list_nvidia_models, make_client, pick_default
 from radar.pipeline import run_watchlist
 from radar.seed import ensure_default
+from radar.snapshot import load_if_fresh
 from radar.signals import detect_spikes, monthly_series, recall_data_suspect
 from radar.sources import nhtsa
 
@@ -36,6 +39,8 @@ except Exception:
 @st.cache_resource
 def get_db(path: str) -> DB:
     db = DB(path)
+    if demo_mode():  # a fresh public demo starts with real stored results instead of an empty dashboard
+        load_if_fresh(db, Path(__file__).parent / "demo" / "snapshot.json")
     ensure_default(db)
     return db
 
@@ -105,10 +110,21 @@ with st.sidebar:
     if not ai_ready:
         st.caption("Connect Nebius and Tavily to run the agents. Early Warning and Fleet Check work without keys.")
 
+    guard = Guard(db)
+    spent, cap = guard.spent(), budget_usd()
+    st.divider()
+    ui.eyebrow("AI budget")
+    st.progress(min(spent / cap, 1.0) if cap else 1.0,
+                text=f"${spent:.2f} of ${cap:.2f} estimated Nemotron spend")
+    if demo_mode():
+        st.caption("Public demo: AI runs and questions are rate-limited per day.")
+
 
 def make_router() -> Router:
+    # Every call is budget-checked first and logged (priced) afterwards
     return Router(make_client(settings.nebius_api_key, settings.nebius_base_url),
-                  settings.fast_model, settings.deep_model)
+                  settings.fast_model, settings.deep_model,
+                  on_call=lambda rec: db.log_llm(None, rec), before_call=guard.check_budget)
 
 
 SECTIONS = [":material/dashboard: Dashboard", ":material/monitoring: Early warning",
@@ -136,10 +152,20 @@ if section == SECTIONS[0]:
                                      disabled=not ai_ready, width="stretch",
                                      help=None if ai_ready else "Connect Nebius and Tavily first")
         if run_clicked:
+            try:
+                guard.allow("run")
+            except (LimitReached, BudgetExceeded) as e:
+                st.warning(str(e), icon=":material/savings:")
+                run_clicked = False
+        if run_clicked:
+            guard.record("run")
             with st.status("Radar running...", expanded=True) as status:
                 try:
                     out = run_watchlist(db, make_router(), settings, wl_id, progress=st.write)
                     status.update(label=f"Run {out['run_id']} complete", state="complete", expanded=False)
+                except BudgetExceeded as e:
+                    status.update(label="Stopped: budget reached", state="error")
+                    st.warning(str(e), icon=":material/savings:")
                 except Exception as e:
                     status.update(label="Run failed", state="error")
                     st.exception(e)
@@ -338,6 +364,14 @@ if section == SECTIONS[3]:
             st.markdown(msg["content"])
     q = st.chat_input("Ask about recalls, regulations, suppliers or a VIN", disabled=not (ai_ready and wl_id))
     if q:
+        asked = sum(m["role"] == "user" for m in st.session_state.analyst_chat)
+        try:
+            guard.allow("question", session_count=asked)
+            guard.record("question")
+        except (LimitReached, BudgetExceeded) as e:
+            st.warning(str(e), icon=":material/savings:")
+            q = None
+    if q:
         st.session_state.analyst_chat.append({"role": "user", "content": q})
         with st.chat_message("user", avatar=":material/person:"):
             st.markdown(q)
@@ -428,8 +462,11 @@ if section == SECTIONS[5]:
             calls = pd.DataFrame(db.llm_calls(rid))
             if len(calls):
                 calls["tokens"] = calls["prompt_tokens"].fillna(0) + calls["completion_tokens"].fillna(0)
-                st.markdown("**Token usage by model**")
+                calls["cost_usd"] = [round(call_cost(m, p, c), 5) for m, p, c in
+                                     zip(calls["model"], calls["prompt_tokens"], calls["completion_tokens"])]
+                st.markdown(f"**Token usage by model**: estimated cost of this run **${calls['cost_usd'].sum():.3f}**")
                 st.dataframe(calls.groupby("model").agg(calls=("step", "count"), tokens=("tokens", "sum"),
+                                                        cost_usd=("cost_usd", "sum"),
                                                         seconds=("seconds", "sum")).reset_index(),
                              hide_index=True, width="stretch")
                 st.dataframe(calls, hide_index=True, width="stretch")

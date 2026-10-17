@@ -86,3 +86,40 @@ def test_priority_tiers():
     assert priority({"p_value": 0.5, "severity": {"crash": 2, "fire": 1, "injuries": 0}}) == "Priority"
     assert priority({"p_value": 0.01, "severity": {"crash": 0, "fire": 0, "injuries": 0}}) == "Watch"
     assert priority({"p_value": 0.5, "severity": {"crash": 0, "fire": 0, "injuries": 0}}) == "Low"
+
+
+def test_budget_guard_stops_calls_and_demo_limits(monkeypatch):
+    import pytest
+    from radar.budget import BudgetExceeded, Guard, LimitReached, call_cost
+    from radar.db import DB
+    db = DB(":memory:")
+    g = Guard(db)
+    assert call_cost("nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B", 1_000_000, 1_000_000) == 0.30
+    monkeypatch.setenv("BUDGET_USD", "1")
+    db.log_llm(None, {"step": "x", "model": "nvidia/Nemotron-3-Ultra-550b", "seconds": 1, "ok": True,
+                      "prompt_tokens": 200_000, "completion_tokens": 200_000})  # $1.00 at the cautious Ultra price
+    with pytest.raises(BudgetExceeded):
+        g.check_budget()
+    # snapshot calls are history, not spend
+    db.conn.execute("UPDATE llm_calls SET step='[snapshot] x'")
+    g.check_budget()
+    monkeypatch.setenv("DEMO_MODE", "1")
+    monkeypatch.setenv("DEMO_RUNS_PER_DAY", "2")
+    for _ in range(2):
+        g.allow("run")
+        g.record("run")
+    with pytest.raises(LimitReached):
+        g.allow("run")
+    with pytest.raises(LimitReached):
+        g.allow("question", session_count=5)
+
+
+def test_snapshot_round_trip():
+    from pathlib import Path
+    from radar.db import DB
+    from radar.snapshot import load_if_fresh
+    db = DB(":memory:")
+    assert load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")
+    wl = db.watchlists()[0]
+    assert wl["name"].endswith("(demo data)") and db.runs(wl["id"]) and db.findings(wl["id"])
+    assert not load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")  # only once
