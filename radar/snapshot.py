@@ -67,7 +67,9 @@ def migrate_legacy(db: DB) -> None:
         if w["name"].endswith(" (demo data)"):
             with db.tx() as c:
                 c.execute("UPDATE watchlists SET name=? WHERE id=?", (w["name"][:-len(" (demo data)")], w["id"]))
-                for r in db.q("SELECT id, stats FROM runs WHERE watchlist_id=?", (w["id"],)):
+                # only runs that were imported (their audit entries carry the snapshot tag), never live runs
+                for r in db.q("SELECT id, stats FROM runs WHERE watchlist_id=? AND id IN "
+                              "(SELECT run_id FROM llm_calls WHERE step LIKE ?)", (w["id"], TAG + "%")):
                     stats = {**json.loads(r["stats"] or "{}"), "source": "snapshot"}
                     c.execute("UPDATE runs SET stats=? WHERE id=?", (json.dumps(stats), r["id"]))
 

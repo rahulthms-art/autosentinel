@@ -157,11 +157,16 @@ def test_legacy_demo_name_is_migrated():
     from radar.snapshot import migrate_legacy
     db = DB(":memory:")
     wl = db.save_watchlist("EV segment watch (demo data)", {"vehicles": []})
-    rid = db.start_run(wl)
-    db.finish_run(rid, "ok", {"relevant": 3})
+    imported = db.start_run(wl)
+    db.finish_run(imported, "ok", {"relevant": 3})
+    db.log_llm(imported, {"step": "[snapshot] Triage", "model": "m", "seconds": 1, "ok": True})
+    live = db.start_run(wl)
+    db.finish_run(live, "ok", {"relevant": 5})
     migrate_legacy(db)
     assert db.watchlists()[0]["name"] == "EV segment watch"
-    assert db.runs(wl)[0]["stats"] == {"relevant": 3, "source": "snapshot"}
+    stats = {r["id"]: r["stats"] for r in db.runs(wl)}
+    assert stats[imported] == {"relevant": 3, "source": "snapshot"}
+    assert stats[live] == {"relevant": 5}  # a live run is never tagged as stored
 
 
 def test_rdw_model_matching_and_plates():
