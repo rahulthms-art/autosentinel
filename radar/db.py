@@ -134,6 +134,12 @@ class DB:
             c.execute("UPDATE runs SET finished_at=?, status=?, stats=?, brief=?, error=? WHERE id=?",
                       (now(), status, json.dumps(stats or {}), brief, error, run_id))
 
+    def mark_interrupted_runs(self) -> int:
+        """Runs still 'running' when a new process starts were cut off by a restart."""
+        with self.tx() as c:
+            return c.execute("UPDATE runs SET status='error', finished_at=?, error=? WHERE status='running'",
+                             (now(), "Interrupted: the app restarted during this run")).rowcount
+
     def runs(self, wl_id: int, limit: int = 50) -> list[dict]:
         rows = self.q("SELECT * FROM runs WHERE watchlist_id=? ORDER BY id DESC LIMIT ?", (wl_id, limit))
         for r in rows:

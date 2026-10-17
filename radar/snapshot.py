@@ -57,10 +57,10 @@ def import_snapshot(db: DB, data: dict) -> int:
 
 
 def load_if_fresh(db: DB, path: Path) -> bool:
-    """Import the snapshot once, into a deployment that has never run anything."""
-    if not path.exists() or db.q("SELECT 1 FROM runs LIMIT 1"):
+    """Import the snapshot once, into a deployment with no successful run of its own."""
+    if not path.exists() or db.q("SELECT 1 FROM runs WHERE status='ok' LIMIT 1"):
         return False
-    for w in db.watchlists():  # a never-run deployment only has empty starter watchlists: replace them
+    for w in db.watchlists():  # only empty starter watchlists (and failed runs) exist: replace them
         db.delete_watchlist(w["id"])
     import_snapshot(db, json.loads(path.read_text()))
     return True

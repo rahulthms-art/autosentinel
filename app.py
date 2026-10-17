@@ -39,6 +39,7 @@ except Exception:
 @st.cache_resource
 def get_db(path: str) -> DB:
     db = DB(path)
+    db.mark_interrupted_runs()  # runs once per server process
     ensure_default(db)
     return db
 

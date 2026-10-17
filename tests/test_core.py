@@ -123,3 +123,16 @@ def test_snapshot_round_trip():
     wl = db.watchlists()[0]
     assert wl["name"].endswith("(demo data)") and db.runs(wl["id"]) and db.findings(wl["id"])
     assert not load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")  # only once
+
+
+def test_interrupted_run_does_not_block_demo_snapshot():
+    from pathlib import Path
+    from radar.db import DB
+    from radar.seed import ensure_default
+    from radar.snapshot import load_if_fresh
+    db = DB(":memory:")
+    ensure_default(db)
+    db.start_run(db.watchlists()[0]["id"])          # cut off by a restart
+    assert db.mark_interrupted_runs() == 1
+    assert load_if_fresh(db, Path(__file__).resolve().parents[1] / "demo" / "snapshot.json")
+    assert [w["name"] for w in db.watchlists()] == ["EV segment watch (EU/UK/US) (demo data)"]
